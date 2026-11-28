@@ -1,0 +1,2 @@
+# FUSE: file systems run as you (network shares, phones, AppImages).
+setuid: [bin/fusermount3]

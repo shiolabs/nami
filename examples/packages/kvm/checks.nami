@@ -1,0 +1,11 @@
+# How to tell kvm works, on a computer nami made (tests/vm-quick.sh tests/namios runs these;
+# its VM has KVM of its own, nested, when the computer running it does).
+"kvm: the computer's first person is in the kvm group (people added since join at the next apply)":
+  run: 'u=$(getent passwd 1000 | cut -d: -f1); case ,$(getent group kvm | cut -d: -f4), in *,$u,*) echo "in: $u" ;; *) echo "missing $u" ;; esac'
+  expect: "^in: "
+"kvm: /dev/vhost-vsock is there, the kvm group's to open":
+  run: "stat -c '%G %A' /dev/vhost-vsock"
+  expect: "^kvm crw-rw-"
+"kvm: /dev/kvm is the kvm group's to open (when the processor has virtualization)":
+  run: "if [ -e /dev/kvm ]; then stat -c '%G %A' /dev/kvm; else echo 'kvm none (no virtualization here)'; fi"
+  expect: "^kvm (crw-rw-|none)"

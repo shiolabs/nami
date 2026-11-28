@@ -1,0 +1,3 @@
+# upower: the battery, for the top bar and Settings.
+services:
+  - upower.service

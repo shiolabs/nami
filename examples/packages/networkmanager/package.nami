@@ -1,0 +1,35 @@
+# NetworkManager runs the network (Wi-Fi, cable, VPN), as on Ubuntu;
+# systemd's own network manager would fight it, so it's kept off.
+services:
+  - NetworkManager.service
+# Everyone may change the network.
+groups:
+  networkmanager: everyone
+without:
+  - systemd-networkd.service
+  - systemd-networkd.socket
+  - systemd-networkd-wait-online.service
+  - systemd-networkd-varlink.socket
+  - systemd-networkd-varlink-metrics.socket
+  - systemd-networkd-persistent-storage.service
+  - systemd-network-generator.service
+files:
+  /etc/NetworkManager/NetworkManager.conf: |
+    [main]
+    plugins=keyfile
+    dns=systemd-resolved
+  /etc/tmpfiles.d/networkmanager.conf: |
+    d /var/lib/NetworkManager 0700 root root -
+    d /etc/NetworkManager/system-connections 0700 root root -
+  # VPN plugins (openvpn's, in gnome): NetworkManager finds them in
+  # /etc/NetworkManager/VPN, where they're listed as the system is put
+  # together.
+  /etc/NetworkManager/VPN:
+    script: |
+      shopt -s nullglob
+      mkdir -p "$out"
+      for p in $packages; do
+        for f in "$p"/lib/NetworkManager/VPN/*.name; do
+          [ -e "$out/${f##*/}" ] || cp "$f" "$out/"
+        done
+      done

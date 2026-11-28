@@ -1,0 +1,22 @@
+# How to tell desktop works, on a computer nami made (tests/usb.sh runs these).
+"video and music: the codecs (H.264, MP3, VP9)":
+  run: gst-inspect-1.0 avdec_h264 >/dev/null && gst-inspect-1.0 mpg123audiodec >/dev/null && gst-inspect-1.0 vp9dec >/dev/null && echo CODECS
+  expect: "CODECS"
+"pictures: WebP and HEIC":
+  run: grep -c 'webp\|heif' "$GDK_PIXBUF_MODULE_FILE" | sed 's/^/N=/'
+  expect: "N=[1-9]"
+"Chinese, Japanese, Korean fonts":
+  run: fc-list :lang=ja | wc -l | sed 's/^/N=/'
+  expect: "N=[1-9]"
+"documents from Windows: Arial's and Times New Roman's stand-ins":
+  run: fc-match Arial; fc-match "Times New Roman"
+  expect: "Liberation Sans"
+"what scripts run on a desktop: xdg-open, notify-send, zenity":
+  run: command -v xdg-open notify-send zenity aplay | wc -l | sed 's/^/N=/'
+  expect: "N=4"
+"Windows computers in Files' Other Locations (wsdd)":
+  run: command -v wsdd
+  expect: "/wsdd$"
+"spell checking (English, and the computer's language: language:)":
+  run: ls /run/current-system/sw/share/hunspell/
+  expect: "en_US.dic"

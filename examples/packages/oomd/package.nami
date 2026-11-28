@@ -1,0 +1,34 @@
+# Running out of memory, as Ubuntu handles it (systemd-oomd): when a
+# person's apps make the computer crawl for want of memory, the worst of
+# them is stopped, before everything freezes. desktop lists this.
+services:
+  - systemd-oomd.service
+files:
+  # It starts once the memory controller is there (its condition, checked
+  # at the socket too early in the start, would keep it off).
+  /etc/systemd/system/systemd-oomd.service.d/nami.conf: |
+    [Unit]
+    ConditionControlGroupController=
+  /etc/systemd/system/systemd-oomd.socket.d/nami.conf: |
+    [Unit]
+    ConditionControlGroupController=
+  # Each person's apps: stopped when they wait for memory half the time, or
+  # when memory and swap are both all but gone (90%: the app with the most in
+  # swap, as Ubuntu's ManagedOOMSwap on the whole computer, but only an app).
+  # Their apps, never their desktop: what's watched is app.slice in their own
+  # service manager, where every app runs (a scope each, as niri's
+  # app-niri-*.scope, or a service), and oomd stops only something inside what
+  # it watches. The desktop is beside it, in session.slice: niri.service (with
+  # nami-desktop), the portals, sound, the session's D-Bus. (Ubuntu watches all
+  # of user@.service and stops whatever in it has its memory taken back fastest.
+  # With an app taking it all, that's the desktop, which draws all the time: the
+  # whole session went for an app's fault, and the app only a minute later.
+  # ManagedOOMPreference=avoid would be honoured on the desktop's own units,
+  # systemd 262 reads it when they and what's watched have one owner, but it
+  # takes a line on each, and one missed, the session's D-Bus, is as bad.
+  # MemoryLow= on session.slice counts only with as much on each slice above.)
+  /etc/systemd/user/app.slice.d/oomd.conf: |
+    [Slice]
+    ManagedOOMSwap=kill
+    ManagedOOMMemoryPressure=kill
+    ManagedOOMMemoryPressureLimit=50%

@@ -1,0 +1,13 @@
+# Podman on a computer nami made, whenever the podman package is on it:
+# the settings every container tool reads, as Ubuntu's containers-common
+# has them (any image may be run; a short name like `alpine` is Docker
+# Hub's). `sudo podman` works, its images in /var/lib/containers; and
+# podman as you (rootless), its images in ~/.local/share/containers, with
+# the user IDs everyone has for containers (/etc/subuid) and shadow's
+# setuid newuidmap.
+files:
+  /etc/containers/policy.json:
+    default: [{ type: insecureAcceptAnything }]
+    transports: { docker-daemon: { "": [{ type: insecureAcceptAnything }] } }
+  /etc/containers/registries.conf: |
+    unqualified-search-registries = ["docker.io"]

@@ -1,0 +1,89 @@
+# CUPS on a computer: its user and folders, its settings (real files: cupsd
+# won't read links), started when something prints (the socket) or a job
+# is waiting (the path).
+services:
+  - cups.socket
+  - cups.path
+# Printing for everyone; admins manage the printers.
+groups:
+  lp: everyone
+  lpadmin: admins
+files:
+  # CUPS's user, and its folders.
+  /etc/sysusers.d/cups.conf: |
+    u lp 7 "Printing" /var/spool/cups
+  /etc/tmpfiles.d/cups.conf: |
+    d /etc/cups 0755 root lp -
+    d /etc/cups/ppd 0755 root lp -
+    d /etc/cups/ssl 0700 root lp -
+    d /var/cache/cups 0770 root lp -
+    d /var/spool/cups 0710 root lp -
+    d /var/spool/cups/tmp 1770 root lp -
+  # Real files with their own mode: cupsd won't read them otherwise.
+  /etc/cups/cups-files.conf:
+    mode: "0640"
+    content: |
+      SystemGroup root wheel
+      ServerBin /run/current-system/sw/lib/cups
+      DataDir /run/current-system/sw/share/cups
+      DocumentRoot /run/current-system/sw/share/doc/cups
+      ServerRoot /etc/cups
+      StateDir /run/cups
+      CacheDir /var/cache/cups
+      RequestRoot /var/spool/cups
+      TempDir /var/spool/cups/tmp
+      AccessLog syslog
+      ErrorLog syslog
+      PageLog syslog
+  # Printing for everyone; adding and changing printers for admins.
+  /etc/cups/cupsd.conf:
+    mode: "0640"
+    content: |
+      LogLevel warn
+      Listen localhost:631
+      Listen /run/cups/cups.sock
+      Browsing On
+      BrowseLocalProtocols dnssd
+      DefaultAuthType Basic
+      WebInterface Yes
+      <Location />
+        Order allow,deny
+      </Location>
+      <Location /admin>
+        Order allow,deny
+      </Location>
+      <Location /admin/conf>
+        AuthType Default
+        Require user @SYSTEM
+        Order allow,deny
+      </Location>
+      <Policy default>
+        JobPrivateAccess default
+        JobPrivateValues default
+        SubscriptionPrivateAccess default
+        SubscriptionPrivateValues default
+        <Limit Create-Job Print-Job Print-URI Validate-Job>
+          Order deny,allow
+        </Limit>
+        <Limit Send-Document Send-URI Hold-Job Release-Job Restart-Job Purge-Jobs Set-Job-Attributes Create-Job-Subscription Renew-Subscription Cancel-Subscription Get-Notifications Reprocess-Job Cancel-Current-Job Suspend-Current-Job Resume-Job Cancel-My-Jobs Close-Job CUPS-Move-Job CUPS-Get-Document>
+          Require user @OWNER @SYSTEM
+          Order deny,allow
+        </Limit>
+        <Limit CUPS-Add-Modify-Printer CUPS-Delete-Printer CUPS-Add-Modify-Class CUPS-Delete-Class CUPS-Set-Default CUPS-Get-Devices>
+          AuthType Default
+          Require user @SYSTEM
+          Order deny,allow
+        </Limit>
+        <Limit Pause-Printer Resume-Printer Enable-Printer Disable-Printer Pause-Printer-After-Current-Job Hold-New-Jobs Release-Held-New-Jobs Deactivate-Printer Activate-Printer Restart-Printer Shutdown-Printer Startup-Printer Promote-Job Schedule-Job-After Cancel-Jobs CUPS-Accept-Jobs CUPS-Reject-Jobs>
+          AuthType Default
+          Require user @SYSTEM
+          Order deny,allow
+        </Limit>
+        <Limit Cancel-Job CUPS-Authenticate-Job>
+          Require user @OWNER @SYSTEM
+          Order deny,allow
+        </Limit>
+        <Limit All>
+          Order deny,allow
+        </Limit>
+      </Policy>

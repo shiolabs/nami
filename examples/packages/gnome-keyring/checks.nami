@@ -1,0 +1,7 @@
+# How to tell gnome-keyring works, on a computer nami made (tests/usb.sh runs these).
+"an SSH agent in each person's session (gcr's)":
+  run: echo $(systemctl --user show-environment | grep -o '^SSH_AUTH_SOCK=.*gcr/ssh') $(SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh ssh-add -l >/dev/null 2>&1; echo answers=$?)
+  expect: "^SSH_AUTH_SOCK=/run/user/[0-9]+/gcr/ssh answers=1$"
+"in the desktop: Electron's apps and Chromium are told the keyring's here, whatever the desktop's name":
+  run: systemctl --user show-environment | grep -E '^GNOME_DESKTOP_SESSION_ID='
+  expect: "^GNOME_DESKTOP_SESSION_ID=."

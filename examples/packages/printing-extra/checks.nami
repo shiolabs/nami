@@ -1,0 +1,4 @@
+# How to tell printing-extra works, on a computer nami made (tests/usb.sh runs these).
+"printing: OpenPrinting's and foo2zjs's drivers":
+  run: lpinfo -m 2>/dev/null | grep -ciE 'foomatic|foo2zjs' | sed 's/^/N=/'
+  expect: "N=[0-9]{3,}"

@@ -1,0 +1,30 @@
+name: Something doesn't work
+description: An app won't install or start, a command fails, the app misbehaves
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: nami doctor
+      description: The output of `nami doctor`.
+      render: text
+  - type: input
+    id: distro
+    attributes:
+      label: Distro and version
+      placeholder: Fedora 44, Ubuntu 26.04, Arch, ...
+    validations:
+      required: true
+  - type: textarea
+    id: spec
+    attributes:
+      label: The nami file involved (if it matters)
+      description: The computer's file (/etc/nami/computer.nami), your ~/user.nami or a project's project.nami. Leave out anything private. Secrets are never in it, only their names.
+      render: yaml

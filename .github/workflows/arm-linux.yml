@@ -1,0 +1,141 @@
+name: ARM Linux
+
+# nami on ARM Linux (aarch64-linux: Raspberry Pi 4 and 5 on a 64-bit system, Graviton and
+# Ampere servers, Snapdragon laptops), on GitHub's ubuntu-24.04-arm runners. One job runs the
+# unit tests. One builds nami's app, nami-gui (gui/), as a release has it for ARM Linux
+# (packaging/gui-release.sh: built with Ubuntu's libraries, packed, its checksum in the app's
+# recipe), and runs its unit tests. The last writes that checksum (and x86_64's app's, when it's
+# given) into the recipe nami carries, builds the release's static nami as ./build.sh builds
+# x86_64's (musl, in Docker, the bundle runtimes attached), packs its tarball as a release has
+# x86_64's, and installs it for real with tests/arm/e2e.sh: the curl installer against a site
+# served on the runner (a test catalog, tests/arm, signed with a test key), the daemon, `nami
+# install`, a project, user.nami, undo, a bundle, nami's app (installed by the installer, opened
+# on a screen of its own, removed and installed again), and the uninstaller.
+#
+# A release asks for it by hand (Actions, ARM Linux, Run workflow, with the release's version
+# and the sha256 of x86_64's nami-gui tarball), and takes the tarballs from the artifacts
+# `nami-gui-aarch64-linux` (as soon as the app's job is done: x86_64's nami carries its checksum
+# too) and `nami-aarch64-linux` (with the app's recipe ARM's nami carries, to compare):
+#   gh run download <run> -n nami-gui-aarch64-linux -D dist
+#   gh run download <run> -n nami-aarch64-linux -D dist
+# Only by hand: on GitHub's runners, read-only and without secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to build as (a release's); default Cargo.toml's"
+        required: false
+      gui-x86_64:
+        description: "The sha256 of the release's nami-gui-<version>-x86_64-linux.tar.gz, for the app's recipe nami carries (dev/publish gives it)"
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  WANT_VERSION: ${{ inputs.version }}
+  GUI_X86_64: ${{ inputs.gui-x86_64 }}
+
+jobs:
+  unit:
+    name: unit tests (aarch64-linux)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # (The release profile's LTO is for what's shipped; the tests needn't wait for it.)
+      - name: Unit tests
+        run: cargo test --release --bin nami --no-fail-fast
+        env:
+          CARGO_PROFILE_RELEASE_LTO: "false"
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
+
+  app:
+    name: nami's app (aarch64-linux)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: The version
+        run: |
+          if [ -n "$WANT_VERSION" ]; then
+            echo "$WANT_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "\"$WANT_VERSION\" isn't a version"; exit 1; }
+            sed -i "0,/^version = /s/^version = .*/version = \"$WANT_VERSION\"/" Cargo.toml
+          fi
+          echo "VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)" >> "$GITHUB_ENV"
+      # (Ubuntu 24.04's: its glibc, 2.39, is older than nixpkgs', which the recipe's
+      # autoPatchelfHook points nami-gui at.)
+      - name: The libraries its windows use
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq pkg-config libfontconfig-dev libfreetype-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb1-dev libwayland-dev >/dev/null
+      - name: Build and pack
+        run: |
+          sh packaging/gui-release.sh
+          file gui/target/release/nami-gui
+          readelf -d gui/target/release/nami-gui | grep NEEDED
+          tar -tzvf "dist/nami-gui-$VERSION-aarch64-linux.tar.gz"
+          sha256sum "dist/nami-gui-$VERSION-aarch64-linux.tar.gz"
+          [ "$(gui/target/release/nami-gui --version)" = "nami-gui $VERSION" ]
+      - name: Unit tests
+        run: NAMI_VERSION=$VERSION cargo test --release --locked --manifest-path gui/Cargo.toml --bin nami-gui
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nami-gui-aarch64-linux
+          path: dist/nami-gui-*-aarch64-linux.tar.gz
+
+  e2e:
+    name: release build, and install for real (aarch64-linux)
+    needs: [app]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: The version
+        run: |
+          if [ -n "$WANT_VERSION" ]; then
+            echo "$WANT_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "\"$WANT_VERSION\" isn't a version"; exit 1; }
+            sed -i "0,/^version = /s/^version = .*/version = \"$WANT_VERSION\"/" Cargo.toml
+          fi
+          echo "VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          name: nami-gui-aarch64-linux
+          path: dist
+      # nami carries its examples, the app's recipe among them: each kind of computer's
+      # checksum goes in before nami is built (x86_64's from the release, when it's given).
+      - name: The app's recipe
+        run: |
+          sh packaging/gui-source.sh aarch64-linux "$(sha256sum "dist/nami-gui-$VERSION-aarch64-linux.tar.gz" | cut -d' ' -f1)"
+          [ -z "$GUI_X86_64" ] || sh packaging/gui-source.sh x86_64-linux "$GUI_X86_64"
+          sed -n '/^version:/,/^build-deps:/p' examples/packages/nami-gui/package.nami
+          sha256sum examples/packages/nami-gui/package.nami
+      - name: Build (static, musl, as ./build.sh builds a release)
+        run: |
+          ./build.sh
+          file target/release/nami
+          target/release/nami --version
+      # What a release has for ARM Linux, packed as x86_64's is (the same bytes for the same files).
+      - name: The tarball
+        run: |
+          stage=$(mktemp -d)
+          b=$stage/nami-$VERSION
+          mkdir -p "$b/nixos" out
+          cp target/release/nami install.sh uninstall.sh packaging/setup.sh "$b/"
+          cp packaging/nixos/nami.nix "$b/nixos/"
+          tar -C "$stage" --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf - "nami-$VERSION" | gzip -n > "out/nami-$VERSION-aarch64-linux.tar.gz"
+          # (And the app's recipe it carries, for the release to check x86_64's nami carries the same.)
+          cp examples/packages/nami-gui/package.nami "out/nami-$VERSION-aarch64-linux.nami-gui.package.nami"
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nami-aarch64-linux
+          path: out/*
+      # (Screens of its own for nami's app to open on: X11's Xvfb, and cage for Wayland.)
+      - name: Screens for the app
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb cage >/dev/null
+      - name: Install, use and uninstall nami
+        run: sh tests/arm/e2e.sh "out/nami-$VERSION-aarch64-linux.tar.gz" "dist/nami-gui-$VERSION-aarch64-linux.tar.gz"
+      - name: What the daemon said
+        if: always()
+        run: sudo journalctl -u nami-daemon.service --no-pager | tail -200 || true

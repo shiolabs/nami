@@ -1,0 +1,4 @@
+# How to tell sudo works, on a computer nami made (tests/usb.sh runs these).
+"admins may use sudo (the wheel group)":
+  run: getent group wheel
+  expect: "^wheel:x:[0-9]+:[a-z_]"

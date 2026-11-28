@@ -1,0 +1,48 @@
+# nami's window: your apps and setup, the computer's apps, people and
+# settings for admins, every step to go back to, and making a USB drive.
+# Built with each nami release, for x86_64 and for ARM Linux
+# (packaging/gui-release.sh writes the version and each one's checksum here);
+# `desktop` lists it, so every desktop has it.
+name: nami-gui
+version: 0.22.3
+source:
+  x86_64-linux:
+    url: https://namios.dev/releases/0.22.3/nami-gui-0.22.3-x86_64-linux.tar.gz
+    sha256: f2d66c13a0aef5f5ca3d35dee04f62304ad9743ea4d3886733fb886215ab4cdb
+  aarch64-linux:
+    url: https://namios.dev/releases/0.22.3/nami-gui-0.22.3-aarch64-linux.tar.gz
+    sha256: 7cecc5273547b76fc0ed2d1ee2782cbee9fa54456925cb79b3b11c2a39ca181e
+build-deps: [autoPatchelfHook]
+deps: [libgcc.lib, fontconfig, freetype, libxkbcommon, libxcb]
+# gpui opens these as it starts: Vulkan to draw, Wayland or X11 to show it.
+runtime-deps: [vulkan-loader, wayland, libxkbcommon]
+install: |
+  install -Dm755 nami-gui $out/bin/nami-gui
+  # namiOS's desktop (x86_64's alone: namiOS is made for x86_64).
+  if [ -e nami-desktop ]; then
+    install -Dm755 nami-desktop $out/bin/nami-desktop
+  fi
+  install -Dm644 nami-gui.desktop $out/share/applications/nami-gui.desktop
+  install -Dm644 nami-gui.svg $out/share/icons/hicolor/scalable/apps/nami-gui.svg
+  install -Dm644 nami-settings.svg $out/share/icons/hicolor/scalable/apps/nami-settings.svg
+  install -Dm644 nami-monitor.svg $out/share/icons/hicolor/scalable/apps/nami-monitor.svg
+  # On other desktops (GNOME, KDE Plasma...) the window is nami, next to their own Settings:
+  # its entry and mark. (Releases before 0.18.6 don't have them.)
+  if [ -e nami.desktop ]; then
+    install -Dm644 nami.desktop $out/share/applications/nami.desktop
+    install -Dm644 nami.svg $out/share/icons/hicolor/scalable/apps/nami.svg
+  fi
+  # On namiOS: Settings as it is on another distribution (Ubuntu, Fedora...), to see Move to
+  # namiOS and the rest there. TryExec keeps it out of other distributions' menus.
+  cat > $out/share/applications/nami-gui-other-linux.desktop <<'EOF'
+  [Desktop Entry]
+  Type=Application
+  Name=nami (as on Other Distributions)
+  Comment=Preview nami's window as it looks on Ubuntu, Fedora and other Linux systems
+  Exec=nami-gui --as-other-linux
+  TryExec=/etc/namios/windows
+  Icon=nami-gui
+  Terminal=false
+  Categories=System;
+  Keywords=preview;other linux;ubuntu;fedora;move to namios;
+  EOF

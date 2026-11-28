@@ -1,0 +1,128 @@
+# NVIDIA's own driver, as Ubuntu's "Additional Drivers" puts it on: the
+# desktop (niri, on Wayland) draws with the card, and CUDA and nvidia-smi
+# work. `- nvidia` (next to namios) in system.nami. A computer without
+# an NVIDIA card starts as before: nothing here loads without one.
+#
+# The driver is NVIDIA's 595, for cards from Turing on (GTX 16xx, RTX 20xx
+# and newer, Quadro T and RTX A), with NVIDIA's open kernel modules,
+# which NVIDIA and Ubuntu use for those cards. Older ones (Maxwell, Pascal
+# and Volta: GTX 750 to GTX 1080 Ti) take nvidia-legacy instead; `nami
+# doctor` says which of the two a computer's card is for.
+#
+# Its libraries aren't free software, so the binary cache doesn't have
+# them: nami builds them once from NVIDIA's download (a few minutes).
+#
+# Secure Boot stays on: the kernel (nixpkgs') doesn't check modules'
+# signatures (MODULE_SIG off) and has no lockdown (SECURITY_LOCKDOWN_LSM
+# off), so NVIDIA's modules load unsigned; shim and systemd-boot check
+# only the kernel, which is signed with the computer's key.
+# The kernel modules (nvidia, nvidia_modeset, nvidia_drm, nvidia_uvm),
+# built for the system's kernel, linuxPackages: the version of each
+# must match. They join the kernel's own in /lib/modules.
+drivers:
+  # The card's own processor runs this (GSP), which the open modules need.
+  firmware: [linuxPackages.nvidia_x11.firmware]
+  # OpenGL, EGL, Vulkan, GBM and VDPAU, next to mesa's in
+  # /run/opengl-driver; and EGL's ways onto Wayland, GBM and X11 (NVIDIA's
+  # EGL finds them in /etc/egl).
+  graphics: [linuxPackages.nvidia_x11.out, egl-wayland, egl-wayland2, egl-gbm, egl-x11]
+  # Their 32-bit builds, for 32-bit programs (most of Steam's games):
+  # part of the same driver, so nothing more is built.
+  graphics-32bit: [linuxPackages.nvidia_x11.lib32]
+  kernel-modules: [linuxPackages.nvidia_x11_stable_open]
+packages:
+  # nvidia-smi, nvidia-bug-report.sh, and CUDA's MPS.
+  - linuxPackages.nvidia_x11.bin
+files:
+  /etc/modprobe.d/nvidia.conf: |
+    # nouveau (and nova, after it) would take the card first.
+    blacklist nouveau
+    blacklist nova_core
+    blacklist nvidiafb
+    # The desktop draws through the kernel (KMS), as Wayland needs; the
+    # text console too (fbdev).
+    options nvidia_drm modeset=1 fbdev=1
+    # What's on the screen survives suspend: the kernel tells the
+    # driver (595 and the open modules do it without systemd services),
+    # and the card's memory is saved on the disk, not in RAM.
+    options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_UseKernelSuspendNotifiers=1 NVreg_TemporaryFilePath=/var/tmp
+  /etc/udev/rules.d/60-nvidia.rules: |
+    # udev loads nvidia for an NVIDIA card (by its PCI id); once it's
+    # in, the rest: the display (nvidia_drm, with nvidia_modeset) and
+    # CUDA's memory (nvidia_uvm). Without a card, nvidia doesn't load,
+    # and neither do these.
+    ACTION=="add", SUBSYSTEM=="module", KERNEL=="nvidia", RUN{builtin}+="kmod load nvidia_modeset nvidia_drm nvidia_uvm"
+    # The device files the driver's libraries open (on Ubuntu,
+    # nvidia-modprobe makes them).
+    ACTION=="add", SUBSYSTEM=="module", KERNEL=="nvidia", RUN+="/run/current-system/sw/bin/sh -c 'PATH=/run/current-system/sw/bin; mknod -m 666 /dev/nvidiactl c 195 255; for i in $$(cat /proc/driver/nvidia/gpus/*/information | grep Minor | cut -d \  -f 4); do mknod -m 666 /dev/nvidia$${i} c 195 $${i}; done'"
+    ACTION=="add", SUBSYSTEM=="module", KERNEL=="nvidia_modeset", RUN+="/run/current-system/sw/bin/sh -c 'PATH=/run/current-system/sw/bin; mknod -m 666 /dev/nvidia-modeset c 195 254'"
+    ACTION=="add", SUBSYSTEM=="module", KERNEL=="nvidia_uvm", RUN+="/run/current-system/sw/bin/sh -c 'PATH=/run/current-system/sw/bin; d=$$(grep nvidia-uvm /proc/devices | cut -d \  -f 1); mknod -m 666 /dev/nvidia-uvm c $$d 0; mknod -m 666 /dev/nvidia-uvm-tools c $$d 1'"
+  # With an NVIDIA card, the login screen waits for udev to have loaded
+  # its driver (a few seconds), so it starts on the card and not on the
+  # firmware's screen, which nvidia_drm then takes away.
+  /etc/systemd/system/gdm.service.d/nvidia.conf: |
+    [Service]
+    ExecStartPre=-/run/current-system/sw/bin/sh -c 'PATH=/run/current-system/sw/bin; if grep -qsx 0x10de /sys/bus/pci/devices/*/vendor; then udevadm settle -t 15; fi'
+hardware:
+  # Made by packaging/nvidia-ids.py from NVIDIA's own list of cards.
+  pci: [
+    "10de:1e02", "10de:1e04", "10de:1e07", "10de:1e09", "10de:1e30",
+    "10de:1e36", "10de:1e78", "10de:1e81", "10de:1e82", "10de:1e84",
+    "10de:1e87", "10de:1e89", "10de:1e90", "10de:1e91", "10de:1e93",
+    "10de:1eb0", "10de:1eb1", "10de:1eb5", "10de:1eb6", "10de:1eb8",
+    "10de:1ec2", "10de:1ec7", "10de:1ed0", "10de:1ed1", "10de:1ed3",
+    "10de:1ef5", "10de:1f02", "10de:1f03", "10de:1f06", "10de:1f07",
+    "10de:1f08", "10de:1f0a", "10de:1f0b", "10de:1f10", "10de:1f11",
+    "10de:1f12", "10de:1f14", "10de:1f15", "10de:1f36", "10de:1f42",
+    "10de:1f47", "10de:1f50", "10de:1f51", "10de:1f54", "10de:1f55",
+    "10de:1f76", "10de:1f82", "10de:1f83", "10de:1f91", "10de:1f95",
+    "10de:1f96", "10de:1f97", "10de:1f98", "10de:1f99", "10de:1f9c",
+    "10de:1f9d", "10de:1f9f", "10de:1fa0", "10de:1fb0", "10de:1fb1",
+    "10de:1fb2", "10de:1fb6", "10de:1fb7", "10de:1fb8", "10de:1fb9",
+    "10de:1fba", "10de:1fbb", "10de:1fbc", "10de:1fdd", "10de:1ff0",
+    "10de:1ff2", "10de:1ff9", "10de:20b0", "10de:20b2", "10de:20b3",
+    "10de:20b5", "10de:20b6", "10de:20b7", "10de:20bd", "10de:20f1",
+    "10de:20f3", "10de:20f5", "10de:20f6", "10de:20fd", "10de:2182",
+    "10de:2184", "10de:2187", "10de:2188", "10de:2189", "10de:2191",
+    "10de:2192", "10de:21c4", "10de:21d1", "10de:2203", "10de:2204",
+    "10de:2206", "10de:2207", "10de:2208", "10de:220a", "10de:220d",
+    "10de:2216", "10de:2230", "10de:2231", "10de:2232", "10de:2233",
+    "10de:2235", "10de:2236", "10de:2237", "10de:2238", "10de:230e",
+    "10de:2321", "10de:2322", "10de:2324", "10de:2329", "10de:232c",
+    "10de:2330", "10de:2331", "10de:2335", "10de:2339", "10de:233a",
+    "10de:233b", "10de:2342", "10de:2348", "10de:2414", "10de:2420",
+    "10de:2438", "10de:2460", "10de:2482", "10de:2484", "10de:2486",
+    "10de:2487", "10de:2488", "10de:2489", "10de:248a", "10de:249c",
+    "10de:249d", "10de:24a0", "10de:24b0", "10de:24b1", "10de:24b6",
+    "10de:24b7", "10de:24b8", "10de:24b9", "10de:24ba", "10de:24bb",
+    "10de:24c7", "10de:24c9", "10de:24dc", "10de:24dd", "10de:24e0",
+    "10de:24fa", "10de:2503", "10de:2504", "10de:2507", "10de:2508",
+    "10de:2520", "10de:2521", "10de:2523", "10de:2531", "10de:2544",
+    "10de:2560", "10de:2563", "10de:2571", "10de:2582", "10de:2584",
+    "10de:25a0", "10de:25a2", "10de:25a5", "10de:25a6", "10de:25a7",
+    "10de:25a9", "10de:25aa", "10de:25ab", "10de:25ac", "10de:25ad",
+    "10de:25b0", "10de:25b2", "10de:25b6", "10de:25b8", "10de:25b9",
+    "10de:25ba", "10de:25bb", "10de:25bc", "10de:25bd", "10de:25e0",
+    "10de:25e2", "10de:25e5", "10de:25ec", "10de:25ed", "10de:25f9",
+    "10de:25fa", "10de:25fb", "10de:2684", "10de:2685", "10de:2689",
+    "10de:26b1", "10de:26b2", "10de:26b3", "10de:26b5", "10de:26b9",
+    "10de:26ba", "10de:2702", "10de:2704", "10de:2705", "10de:2709",
+    "10de:2717", "10de:2730", "10de:2757", "10de:2770", "10de:2782",
+    "10de:2783", "10de:2786", "10de:2788", "10de:27a0", "10de:27b0",
+    "10de:27b1", "10de:27b2", "10de:27b6", "10de:27b8", "10de:27ba",
+    "10de:27bb", "10de:27e0", "10de:27fb", "10de:2803", "10de:2805",
+    "10de:2808", "10de:2820", "10de:2822", "10de:2838", "10de:2860",
+    "10de:2882", "10de:28a0", "10de:28a1", "10de:28a3", "10de:28b0",
+    "10de:28b8", "10de:28b9", "10de:28ba", "10de:28bb", "10de:28e0",
+    "10de:28e1", "10de:28e3", "10de:28f8", "10de:2901", "10de:2909",
+    "10de:2941", "10de:29bb", "10de:2b85", "10de:2b87", "10de:2b8c",
+    "10de:2bb1", "10de:2bb3", "10de:2bb4", "10de:2bb5", "10de:2bb9",
+    "10de:2c02", "10de:2c05", "10de:2c18", "10de:2c19", "10de:2c31",
+    "10de:2c33", "10de:2c34", "10de:2c38", "10de:2c39", "10de:2c3a",
+    "10de:2c58", "10de:2c59", "10de:2c77", "10de:2c79", "10de:2d04",
+    "10de:2d05", "10de:2d18", "10de:2d19", "10de:2d30", "10de:2d39",
+    "10de:2d58", "10de:2d59", "10de:2d79", "10de:2d83", "10de:2d98",
+    "10de:2db8", "10de:2db9", "10de:2dd8", "10de:2df9", "10de:2e12",
+    "10de:2f04", "10de:2f06", "10de:2f18", "10de:2f38", "10de:2f58",
+    "10de:3182", "10de:31c2", "10de:31c3"
+  ]

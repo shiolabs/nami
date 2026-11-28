@@ -1,0 +1,12 @@
+# Redis for a project: copy this file to its services/ folder and list it,
+# `- ./services/redis.nami`, under services: in its project.nami.
+# Its socket and saved data are in the project's .nami/redis ({sockets}: a
+# short folder elsewhere when that path is too long for a socket).
+about: Redis, the in-memory store
+packages: [redis]
+port: 6379
+run: redis-server --port {port} --bind 127.0.0.1 --unixsocket {sockets}/redis.sock --unixsocketperm 700 --dir {state} --daemonize no
+ready: redis-cli -s {sockets}/redis.sock ping
+exports:
+  REDIS_URL: redis://localhost:{port}
+  REDIS_SOCKET: "{sockets}/redis.sock"

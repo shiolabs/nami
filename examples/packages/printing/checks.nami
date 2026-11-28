@@ -1,0 +1,13 @@
+# How to tell printing works, on a computer nami made (tests/usb.sh runs these).
+"printing: printer drivers (Gutenprint)":
+  run: lpinfo -m 2>/dev/null | grep -ci gutenprint | sed 's/^/N=/'
+  expect: "N=[1-9]"
+"printing: Brother's and Samsung's laser drivers":
+  run: lpinfo -m 2>/dev/null | grep -ciE 'brlaser|splix|samsung' | sed 's/^/N=/'
+  expect: "N=[1-9]"
+"printing: printers on the network need no driver (IPP Everywhere)":
+  run: lpinfo -m 2>/dev/null | grep -c everywhere | sed 's/^/N=/'
+  expect: "N=[1-9]"
+"printing: Settings' Printers panel can add printers (cups-pk-helper)":
+  run: timeout 30 busctl --system introspect org.opensuse.CupsPkHelper.Mechanism / | grep -c PrinterAdd | sed 's/^/N=/'
+  expect: "N=[1-9]"

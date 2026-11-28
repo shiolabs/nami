@@ -1,0 +1,10 @@
+# simp's build.rs runs git and cargo-about (for its licence page), and
+# libwebp's build needs nasm: the tools its README lists, as packages.
+# Copied into the unpacked simp-3.11.0 folder, then `nami bundle .` there.
+packages:
+  - git
+  - cargo-about
+  - nasm
+  - pkg-config
+bundle:
+  icon: icon.png

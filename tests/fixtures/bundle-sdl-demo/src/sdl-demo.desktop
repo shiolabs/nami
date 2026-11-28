@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=SDL demo
+Comment=A window drawn with OpenGL, from a nami bundle
+Exec=sdl-demo
+Icon=applications-games
+Categories=Game;

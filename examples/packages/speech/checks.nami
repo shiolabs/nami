@@ -1,0 +1,4 @@
+# How to tell speech works, on a computer nami made (tests/usb.sh runs these).
+"the screen reader's voice: Speech Dispatcher, started when asked":
+  run: systemctl --user is-enabled speech-dispatcher.socket; timeout 60 spd-say -w -o espeak-ng "hello" && echo SPOKE
+  expect: "SPOKE"

@@ -1,0 +1,10 @@
+# How to tell gdm works, on a computer nami made (tests/usb.sh runs these).
+"the login screen":
+  run: systemctl is-active display-manager
+  expect: "^active"
+"GDM: the finger next to the password box, the password alone in it":
+  run: grep -c pam_fprintd /etc/pam.d/gdm-fingerprint /etc/pam.d/gdm-password | tr '\n' ' '
+  expect: "gdm-fingerprint:1 .*gdm-password:0"
+"GDM: each person starts in the first desktop (AccountsService)":
+  run: u=$(busctl --system call org.freedesktop.Accounts /org/freedesktop/Accounts org.freedesktop.Accounts FindUserByName s "$(id -un)" | cut -d'"' -f2); s=$(busctl --system get-property org.freedesktop.Accounts "$u" org.freedesktop.Accounts.User Session); [ "$s" = "s \"$(cat /run/current-system/default-session)\"" ] && echo SAME || echo "$s"
+  expect: "^SAME"

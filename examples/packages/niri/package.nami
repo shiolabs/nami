@@ -1,0 +1,34 @@
+# Windows side by side in a row that scrolls, by keyboard: niri itself,
+# with what it needs around it: the login screen, files, the keyring,
+# X11 apps and the portal. Its bar, launcher and the rest are a look:
+# namios-look (nami's own desktop).
+#
+# It's niri with namiOS's changes (desktop/niri), so floating windows behave as
+# a Mac's. Compiled once per change of the patches
+# (packaging/desktop-release.sh writes the version and checksum here), so no
+# computer compiles it.
+name: niri
+version: 26.04-nami.1
+source:
+  url: https://namios.dev/releases/0.22.3/niri-26.04-nami.1-x86_64-linux.tar.gz
+  sha256: 07478c511b9e8f5e5c6dbc2dc56270bc960a568d70f28916e49ba373c1ab16aa
+build-deps: [autoPatchelfHook]
+deps: [libgcc.lib, cairo, pango, glib, libinput, libxkbcommon, wayland, seatd, systemd, libgbm, libdisplay-info_0_3, pipewire, libglvnd]
+# It opens these as it starts (not named in the program, so they'd be dropped).
+runtime-deps: [wayland, libxkbcommon, libglvnd, libgbm]
+install: |
+  mkdir -p $out
+  cp -r bin share $out/
+  sed -i "s|^ExecStart=niri |ExecStart=$out/bin/niri |" $out/share/systemd/user/niri.service
+packages:
+  - desktop
+  - gdm
+  # Files, and the keyring (GNOME's).
+  - nautilus
+  - gnome-keyring
+  - gcr_4
+  - xwayland-satellite
+  - xdg-desktop-portal-gnome
+  # VPN connections (OpenVPN's, in Settings' VPN).
+  - networkmanager-openvpn
+  - brightnessctl

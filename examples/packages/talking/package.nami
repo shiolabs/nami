@@ -1,0 +1,6 @@
+# Talking to people: messages and calls. Others: discord, slack,
+# zoom-us, teams-for-linux.
+packages:
+  - signal-desktop
+  - element-desktop
+  - telegram-desktop

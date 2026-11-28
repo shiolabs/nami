@@ -1,0 +1,6 @@
+project('hello-meson', 'c', version : '0.9.2')
+zdep = dependency('zlib')
+add_project_arguments('-DVERSION="' + meson.project_version() + '"', language : 'c')
+executable('hello-meson', 'main.c', dependencies : zdep, install : true)
+install_data('hello-meson.desktop', install_dir : get_option('datadir') / 'applications')
+install_data('hello-meson.svg', install_dir : get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps')

@@ -1,0 +1,202 @@
+# Claude Desktop: Anthropic's app, with its Chat, Cowork and Code tabs.
+# Unfree: this recipe takes Anthropic's own Linux build (the .deb its apt
+# repository serves to Ubuntu and Debian) at build time, pinned by its hash;
+# the app itself is never in this repo, and what it builds is for you alone
+# (Anthropic's terms: it can't be passed on). nami unpacks the .deb itself
+# and points its programs at nixpkgs' libraries; nothing of its maintainer
+# scripts runs (they write an apt source and an AppArmor profile, which a
+# nami computer has no use for).
+#
+#   packages:
+#     - claude-desktop     # in system.nami (or a person's user.nami)
+#     - kvm                # system.nami: for Cowork
+#
+# (or `nami install ./claude-desktop`, this folder).
+#
+# Then Claude is in the launcher. Signing in opens the browser, and the
+# browser hands claude:// back to the app (the menu entry registers it).
+# The sign-in is kept in the keyring (gnome-keyring on namiOS).
+#
+# Cowork runs its tasks in a small VM, with QEMU and KVM, as on Ubuntu.
+# The app looks for QEMU and its firmware at Debian's paths
+# (/usr/bin/qemu-system-x86_64, /usr/share/OVMF), and its helper (a static
+# Go program) starts QEMU at the path the app found: the helper runs in a
+# view of / where those paths are nixpkgs' QEMU and firmware (bubblewrap,
+# a /usr of its own; the rest of the computer as it is), and the app finds
+# them there too (debian-paths.so, below: its look for them, access(), and
+# nothing else). It also needs /dev/kvm and /dev/vhost-vsock: on namiOS,
+# the kvm package (`- kvm` in system.nami).
+#
+# A new version: the newest in Anthropic's signed index,
+#   https://downloads.claude.ai/claude-desktop/apt/stable/dists/stable/main/binary-amd64/Packages
+# (its InRelease is signed by 31DD DE24 DDFA B679 F42D 7BD2 BAA9 29FF 1A7E CACE);
+# its Filename, Version and SHA256 go below.
+name: claude-desktop
+version: 4.16336.0
+source:
+  url: https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_4.16336.0_amd64.deb
+  sha256: 3810733e93792f70eae921175d13e53d1cc6bdce9dc23117f0588087521a64bc
+deps:
+  - alsa-lib             # libasound.so.2
+  - at-spi2-core         # libatk-1.0.so.0, libatk-bridge-2.0.so.0, libatspi.so.0
+  - cairo                # libcairo.so.2
+  - cups.lib             # libcups.so.2
+  - dbus.lib             # libdbus-1.so.3
+  - expat                # libexpat.so.1
+  - glib                 # libgio-2.0.so.0, libglib-2.0.so.0, libgobject-2.0.so.0
+  - gtk3                 # libgtk-3.so.0
+  - libgbm               # libgbm.so.1
+  - libgcc.lib           # libgcc_s.so.1, libstdc++.so.6
+  - libseccomp.lib       # libseccomp.so.2 (the bundled virtiofsd)
+  - libcap_ng            # libcap-ng.so.0 (the bundled virtiofsd)
+  - libx11               # libX11.so.6
+  - libxcb               # libxcb.so.1
+  - libxcomposite        # libXcomposite.so.1
+  - libxdamage           # libXdamage.so.1
+  - libxext              # libXext.so.6
+  - libxfixes            # libXfixes.so.3
+  - libxkbcommon         # libxkbcommon.so.0
+  - libxrandr            # libXrandr.so.2
+  - nspr                 # libnspr4.so
+  - nss                  # libnss3.so, libnssutil3.so, libsmime3.so
+  - pango                # libpango-1.0.so.0
+  - pipewire             # libpipewire-0.3.so.0
+  - systemdLibs          # libudev.so.1
+# What Chromium opens by name as it runs (dlopen).
+runtime-deps:
+  - libglvnd             # libEGL.so.1, libGL.so.1, libGLESv2.so.2
+  - wayland              # libwayland-client.so.0
+  - libsecret            # libsecret-1.so.0: the keyring
+  - libnotify            # libnotify.so.4
+  - libayatana-appindicator  # its icon by the clock
+  - libpulseaudio        # libpulse.so.0
+  - libxcursor           # libXcursor.so.1
+  - libxtst              # libXtst.so.6
+  - gdk-pixbuf           # libgdk_pixbuf-2.0.so.0
+  - gtk4                 # libgtk-4.so.1 (Chromium's GTK 4 file chooser, when asked)
+  - fontconfig           # libfontconfig.so.1
+  - curl                 # libcurl.so.4
+  - krb5.lib             # libgssapi_krb5.so.2
+  - libdrm               # libdrm.so.2
+  - libuuid.lib          # libuuid.so.1
+# Cowork's VM (see above), and the programs the app starts by name when the
+# computer has none: the browser opener, bubblewrap and socat (Claude Code's
+# sandbox), ssh (remote sessions).
+build-deps: [qemu_kvm, OVMF.fd, bubblewrap, socat, openssh, xdg-utils]
+install: |
+  runHook preInstall
+  mkdir -p $out
+  cp -a . $out/
+  app=$out/lib/claude-desktop
+  # A setuid helper; the store can't hold setuid files. Chromium uses user
+  # namespaces for its sandbox instead (what it does on Ubuntu 24.04 too).
+  rm -f $app/chrome-sandbox
+
+  # Its window buttons on the left, as every window's on namiOS: its main window has a frame,
+  # so niri draws its bar with namiOS's three buttons over the app's own top row. As Anthropic
+  # builds it, that window has no frame and Electron draws minimize, maximize and close over the
+  # page itself; on the left, as GTK's layout puts them, they cover the page's menu, since
+  # Electron tells the page its title area starts at the window's left edge whichever side they
+  # are on. One word of the app's own code, its length kept (an asar lists where each file
+  # starts): the window's title bar style goes unread, and the frame is Electron's default.
+  # (Electron checks an asar's contents only on macOS and Windows.) A version without it
+  # fails here, rather than coming with its buttons over its menu.
+  grep -aq 'titleBarStyle:"hidden",titleBarOverlay:!0,trafficLightPosition' $app/resources/app.asar ||
+    { echo "claude-desktop: its main window's title bar style isn't where it was (see the recipe)"; exit 1; }
+  sed -i 's/titleBarStyle:"hidden",titleBarOverlay:!0,trafficLightPosition/titleBarStylX:"hidden",titleBarOverlay:!0,trafficLightPosition/' $app/resources/app.asar
+
+  qemu=$(command -v qemu-system-x86_64)
+  ovmf=
+  for p in $nativeBuildInputs; do [ -e "$p/FV/OVMF_CODE.fd" ] && ovmf=$p/FV; done
+  [ -n "$ovmf" ] || { echo "no OVMF firmware"; exit 1; }
+  bwrap=$(command -v bwrap)
+  tools=$(dirname "$(command -v xdg-open)"):$(dirname "$bwrap"):$(dirname "$(command -v socat)"):$(dirname "$(command -v ssh)")
+
+  # Cowork's helper, in a / whose /usr has QEMU and its firmware where the
+  # app expects them, and the rest of the computer's /usr as it is. Links,
+  # not mounts: QEMU finds its ROMs next to where it really is. Not
+  # needed where the computer has them there itself (Ubuntu with qemu).
+  mv $app/resources/cowork-linux-helper $app/resources/.cowork-linux-helper-real
+  cat > $app/resources/cowork-linux-helper <<EOF
+  #!$SHELL
+  real=$app/resources/.cowork-linux-helper-real
+  if [ -x /usr/bin/qemu-system-x86_64 ] && [ -e /usr/share/OVMF/OVMF_CODE_4M.fd -o -e /usr/share/OVMF/OVMF_CODE.fd ]; then
+    exec "\$real" "\$@"
+  fi
+  args="--dev-bind / / --tmpfs /usr"
+  for d in /usr/*/* /usr/*; do
+    [ -e "\$d" ] || [ -L "\$d" ] || continue
+    case "\$d" in /usr/bin|/usr/share|/usr/libexec|/usr/bin/qemu-system-x86_64|/usr/share/OVMF) continue ;; esac
+    case "\$d" in /usr/bin/*|/usr/share/*|/usr/libexec/*) ;; */*/*) continue ;; esac
+    if [ -L "\$d" ]; then args="\$args --symlink \$(readlink "\$d") \$d"; else args="\$args --dev-bind \$d \$d"; fi
+  done
+  exec $bwrap \$args \\
+    --symlink $qemu /usr/bin/qemu-system-x86_64 \\
+    --symlink $ovmf /usr/share/OVMF \\
+    -- "\$real" "\$@"
+  EOF
+  chmod +x $app/resources/cowork-linux-helper
+
+  # Where the app looks for QEMU and its firmware, when they aren't there:
+  # nixpkgs'. For the app's own process alone (it takes itself out of
+  # LD_PRELOAD as it loads): Chromium's sandbox won't start its zygote
+  # with a library like this in it (nor with libredirect, which nami uses
+  # for a .deb's own paths), and the programs the app starts don't need it.
+  mkdir -p $out/lib/claude-desktop-nami
+  cat > debian-paths.c <<EOF
+  #define _GNU_SOURCE
+  #include <dlfcn.h>
+  #include <errno.h>
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  static const char *map[][2] = {
+    { "/usr/bin/qemu-system-x86_64", "$qemu" },
+    { "/usr/share/OVMF/", "$ovmf/" },
+    { 0, 0 },
+  };
+  static const char *to(const char *p, char *buf, size_t n) {
+    for (int i = 0; p && map[i][0]; i++) {
+      size_t l = strlen(map[i][0]);
+      if (strncmp(p, map[i][0], l) == 0 && (map[i][0][l - 1] == '/' || p[l] == 0)) {
+        snprintf(buf, n, "%s%s", map[i][1], p + l);
+        return buf;
+      }
+    }
+    return 0;
+  }
+  /* The path itself first; nixpkgs' where it isn't there. */
+  #define TRY(call) do { int r = call; char b[4096]; if (r == 0 || errno != ENOENT || !to(p, b, sizeof b)) return r; p = b; return call; } while (0)
+  int access(const char *p, int m) { static int (*f)(const char *, int); if (!f) f = dlsym(RTLD_NEXT, "access"); TRY(f(p, m)); }
+  int euidaccess(const char *p, int m) { static int (*f)(const char *, int); if (!f) f = dlsym(RTLD_NEXT, "euidaccess"); TRY(f(p, m)); }
+  int eaccess(const char *p, int m) { return euidaccess(p, m); }
+  int faccessat(int d, const char *p, int m, int fl) { static int (*f)(int, const char *, int, int); if (!f) f = dlsym(RTLD_NEXT, "faccessat"); TRY(f(d, p, m, fl)); }
+  __attribute__((constructor)) static void out_of_ld_preload(void) {
+    const char *v = getenv("LD_PRELOAD");
+    if (!v) return;
+    char *keep = calloc(1, strlen(v) + 1), *copy = strdup(v), *save = 0;
+    for (char *t = strtok_r(copy, ": ", &save); t; t = strtok_r(0, ": ", &save))
+      if (!strstr(t, "/debian-paths.so")) { if (*keep) strcat(keep, ":"); strcat(keep, t); }
+    if (*keep) setenv("LD_PRELOAD", keep, 1); else unsetenv("LD_PRELOAD");
+    free(copy); free(keep);
+  }
+  EOF
+  $CC -O2 -shared -fPIC -o $out/lib/claude-desktop-nami/debian-paths.so debian-paths.c -ldl
+  rm debian-paths.c
+
+  # The program: the menu's, and a terminal's claude-desktop.
+  rm $out/bin/claude-desktop
+  cat > $out/bin/claude-desktop <<EOF
+  #!$SHELL
+  if [ ! -x /usr/bin/qemu-system-x86_64 ] || [ ! -e /usr/share/OVMF/OVMF_CODE.fd -a ! -e /usr/share/OVMF/OVMF_CODE_4M.fd ]; then
+    export LD_PRELOAD="$out/lib/claude-desktop-nami/debian-paths.so\${LD_PRELOAD:+:\$LD_PRELOAD}"
+  fi
+  export PATH="\${PATH:+\$PATH:}$tools"
+  exec -a "\$0" $app/claude-desktop "\$@"
+  EOF
+  chmod +x $out/bin/claude-desktop
+
+  sed -i "s|^Exec=claude-desktop|Exec=$out/bin/claude-desktop|" $out/share/applications/com.anthropic.Claude.desktop
+  # Its own file types (.mcpb, .skill), as its maintainer script registers them.
+  install -Dm644 $app/resources/linux-mime/com.anthropic.Claude.xml $out/share/mime/packages/com.anthropic.Claude.xml
+  runHook postInstall

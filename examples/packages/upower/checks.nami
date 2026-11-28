@@ -1,0 +1,4 @@
+# How to tell upower works, on a computer nami made (tests/usb.sh runs these).
+"the battery, for the top bar (upower)":
+  run: upower -e
+  expect: "DisplayDevice"

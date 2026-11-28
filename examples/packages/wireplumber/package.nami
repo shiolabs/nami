@@ -1,0 +1,3 @@
+# PipeWire's session manager (which device plays what), next to PipeWire.
+services:
+  - wireplumber.service: { per-person: true }

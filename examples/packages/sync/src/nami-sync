@@ -1,0 +1,107 @@
+#!/bin/sh
+# nami-sync: your folders kept the same on your computers (Syncthing), as
+# ~/.config/nami-sync.conf says:
+#
+#   [folders]                 name = path: the same name on each computer is the same folder
+#   Sync = ~/Sync
+#   [computers]               the others to sync with: name = their Syncthing ID
+#   desktop = MFZWI3D-...
+#
+#   nami-sync apply     make Syncthing match it (after each change to it)
+#   nami-sync id        this computer's Syncthing ID, to give the others
+#   nami-sync status    the folders (how much is left) and the computers (online), as JSON
+set -eu
+st=@syncthing@
+jq=@jq@
+curl=@curl@
+conf=${NAMI_SYNC_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/nami-sync.conf}
+# (The older name of the file, until it's written again.)
+[ -e "$conf" ] || [ ! -e "${conf%/*}/tray-sync.conf" ] || conf=${conf%/*}/tray-sync.conf
+c() { $st cli "$@"; }
+
+# name = value lines of a [section].
+section() { awk -v s="[$1]" '/^\[/ { on = ($0 == s); next } on { i = index($0, " = "); if (i) print substr($0, 1, i - 1) "\t" substr($0, i + 3) }' "$conf" 2>/dev/null || true; }
+
+# Syncthing answers once it's up (it starts with you).
+up() {
+  i=0
+  until c show system >/dev/null 2>&1; do
+    i=$((i + 1)); [ $i -lt 60 ] || { echo "Syncthing isn't running (systemctl --user status syncthing)" >&2; exit 1; }
+    sleep 1
+  done
+}
+
+rest() {
+  key=$(c config gui apikey get) addr=$(c config gui raw-address get)
+  $curl -fsS -H "X-API-Key: $key" "http://$addr/rest/$1"
+}
+
+case ${1:-} in
+apply)
+  up
+  me=$(c show system | $jq -r .myID)
+  tab=$(printf '\t')
+  # The computers: added (named), and the ones taken out of the file let go.
+  want=$(section computers | cut -f2 | tr 'a-z' 'A-Z')
+  section computers | while IFS="$tab" read -r name id; do
+    id=$(echo "$id" | tr 'a-z' 'A-Z')
+    [ "$id" = "$me" ] && continue
+    if c config devices list | grep -qx "$id"; then
+      c config devices "$id" name set "$name"
+    else
+      echo "computer $name: added"
+      c config devices add --device-id "$id" --name "$name"
+    fi
+  done
+  for id in $(c config devices list); do
+    [ "$id" = "$me" ] || echo "$want" | grep -qx "$id" || { echo "computer $id: let go"; c config devices "$id" delete; }
+  done
+  # The folders: each shared with every computer listed; taken out of the
+  # file, Syncthing stops syncing it (its files stay).
+  names=$(section folders | cut -f1)
+  section folders | while IFS="$tab" read -r name path; do
+    case $path in "~/"*) path=$HOME/${path#"~/"} ;; "~") path=$HOME ;; esac
+    mkdir -p "$path"
+    if c config folders list | grep -qx "$name"; then
+      c config folders "$name" path set "$path"
+    else
+      echo "folder $name ($path): syncing"
+      c config folders add --id "$name" --label "$name" --path "$path"
+    fi
+    have=$(c config folders "$name" devices list)
+    for id in $want; do
+      [ "$id" = "$me" ] || echo "$have" | grep -qx "$id" || c config folders "$name" devices add --device-id "$id"
+    done
+    for id in $have; do
+      [ "$id" = "$me" ] || echo "$want" | grep -qx "$id" || c config folders "$name" devices "$id" delete
+    done
+  done
+  for f in $(c config folders list); do
+    echo "$names" | grep -qx "$f" || { echo "folder $f: not synced any more (its files stay)"; c config folders "$f" delete; }
+  done
+  ;;
+id)
+  up
+  c show system | $jq -r .myID
+  ;;
+status)
+  up
+  me=$(c show system | $jq -r .myID)
+  conns=$(rest system/connections)
+  {
+    section folders | while IFS="$(printf '\t')" read -r name path; do
+      s=$(rest "db/status?folder=$name" 2>/dev/null || echo '{}')
+      printf '%s\n' "$s" | $jq -c --arg n "$name" --arg p "$path" '{name: $n, path: $p, state: (.state // "unknown"), need: (.needBytes // 0), bytes: (.globalBytes // 0), files: (.globalFiles // 0)}'
+    done
+  } | $jq -s --arg me "$me" --argjson conns "$conns" --arg comps "$(section computers)" '{
+      id: $me,
+      folders: .,
+      computers: ($comps | split("\n") | map(select(length > 0) | split("\t") | {name: .[0], id: (.[1] | ascii_upcase)})
+        | map(. + {online: ($conns.connections[.id].connected // false)}))
+    }'
+  ;;
+*)
+  sed -n '2,13s/^# \{0,1\}//p' "$0"
+  exit 2
+  ;;
+esac

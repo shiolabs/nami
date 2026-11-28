@@ -1,0 +1,146 @@
+# Backups of what's yours on this computer: everyone's homes, the data
+# services keep (/var/lib) and the computer's nami files. Your nami files
+# bring the computer back (apps, settings, people); this brings back what
+# you made on it. restic does it: encrypted, each file once however many
+# days have it, to a USB disk, another computer or a cloud bucket.
+#
+#   packages:
+#     - ../shared/packages/backup
+#   files:
+#     /etc/nami-backup.conf:
+#       to: disk:Backups          # a USB disk, by its label: backs up when it's plugged in
+#       # to: sftp:ada@nas:/backups/laptop    another computer (root's SSH key)
+#       # to: b2:my-bucket:laptop              a bucket (restic's names: s3:, b2:, rest:, rclone:...)
+#       when: daily               # or hourly, weekly
+#       keep: { daily: 7, weekly: 4, monthly: 12 }
+#       leave-out: [~/Downloads, ~/Videos]
+#     # Without it nobody can read the backups (you neither: keep a copy).
+#     /run/nami/secrets/backup-password: !secret "YWdl..."
+#     # A bucket's keys, if it needs them (AWS_ACCESS_KEY_ID=..., B2_ACCOUNT_KEY=...).
+#     /run/nami/secrets/backup-env: !secret "YWdl..."
+#
+# Left out: caches, the trash, Docker's and Podman's images, and what nami
+# builds again (apps, /nix). A disk keeps them in nami-backup/<hostname>.
+#
+# How it runs: every hour, root's nami-backup.service backs up when one
+# is due, and when a disk is plugged in. "Back up now" in the window (or
+# `sudo systemctl start nami-backup-now`) doesn't wait. After a week
+# without one, everyone at the desktop is told why. A computer made again
+# from the same nami files, at its first login, offers to bring back
+# your home as the newest backup from before has it.
+#
+# Restoring: `sudo nami-backup restore 2026-10-20 /home/ada/Documents`,
+# or the window's Backups page; `nami-backup status` says what there is.
+name: backup
+version: "1"
+source:
+  path: ./src
+deps: [restic, jq]
+install: |
+  mkdir -p $out/bin
+  sed -e "s|@restic@|$(command -v restic)|" -e "s|@jq@|$(command -v jq)|" nami-backup > $out/bin/nami-backup
+  chmod +x $out/bin/nami-backup
+# The desktop's notices read nami-backup's status with it.
+packages:
+  - jq
+services:
+  - nami-backup.timer
+  # Each person's, in their desktop session.
+  - nami-backup-notice.service: { per-person: true }
+  - nami-backup-notice.path: { per-person: true }
+files:
+  # The settings: none here; system.nami's backup.conf is its content.
+  /etc/nami-backup.conf:
+    content: {}
+  /etc/systemd/system/nami-backup.service: |
+    [Unit]
+    Description=Backs up this computer, when a backup is due
+    Wants=network-online.target
+    After=network-online.target
+    [Service]
+    Type=oneshot
+    ExecStart=/run/current-system/sw/bin/nami-backup run
+    Nice=19
+    IOSchedulingClass=idle
+  /etc/systemd/system/nami-backup-now.service: |
+    [Unit]
+    Description=Backs up this computer now
+    Wants=network-online.target
+    After=network-online.target
+    [Service]
+    Type=oneshot
+    ExecStart=/run/current-system/sw/bin/nami-backup run --now
+  /etc/systemd/system/nami-backup.timer: |
+    [Unit]
+    Description=Backs up this computer when a backup is due (it looks every hour)
+    [Timer]
+    OnBootSec=5min
+    OnCalendar=hourly
+    RandomizedDelaySec=5min
+    Persistent=true
+    [Install]
+    WantedBy=timers.target
+  # A disk plugged in: maybe the backup disk (nami-backup looks).
+  /etc/udev/rules.d/90-nami-backup.rules: |
+    ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="?*", TAG+="systemd", ENV{SYSTEMD_WANTS}+="nami-backup.service"
+  /etc/nami-os/backup/notice:
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      # In each person's desktop session: at login, and after each try.
+      # A computer made again: bring back your home from before? Once.
+      # No backup for a week: why.
+      status=$(nami-backup status 2>/dev/null) || exit 0
+      at() { printf '%s' "$status" | jq -r "$1"; }
+      [ "$(at .to)" != null ] || exit 0
+      mine=${XDG_STATE_HOME:-$HOME/.local/state}/nami-backup
+      mkdir -p "$mine"
+      # The desktop shows notifications once it's up.
+      i=0
+      until busctl --user status org.freedesktop.Notifications >/dev/null 2>&1; do
+        i=$((i + 1)); [ $i -lt 120 ] || exit 0; sleep 1
+      done
+      id=$(at '.before.id // empty')
+      if [ -n "$id" ] && [ ! -e "$mine/offered" ]; then
+        touch "$mine/offered"
+        day=$(date -d "$(at .before.time)" '+%B %-d' 2>/dev/null || at .before.time)
+        a=$(notify-send --app-name=Backups --icon=document-revert --action=restore="Bring it back" --wait \
+          "Your files from $day are in a backup" "This computer was made again. Bring back your home as it was then?")
+        if [ "$a" = restore ]; then
+          if pkexec /run/current-system/sw/bin/nami-backup restore "$id" "$HOME"; then
+            notify-send --app-name=Backups --icon=document-revert "Your files are back" "Log out and in again for your apps to see them."
+          else
+            notify-send --app-name=Backups --icon=dialog-error "Your files couldn't be brought back" "sudo nami-backup restore $id $HOME says why."
+          fi
+        fi
+        exit 0
+      fi
+      last=$(at '.done // .since // empty')
+      [ -n "$last" ] || exit 0
+      days=$(( ($(date +%s) - last) / 86400 ))
+      [ "$days" -ge 7 ] || exit 0
+      # Once a day.
+      [ "$(cat "$mine/told" 2>/dev/null)" = "$(date +%F)" ] && exit 0
+      date +%F > "$mine/told"
+      said=$(at .said)
+      notify-send --app-name=Backups --icon=dialog-warning "Not backed up for $days days" "Last time: $said."
+  /etc/systemd/user/nami-backup-notice.service: |
+    [Unit]
+    Description=Tells you about your backups (none for a week; your files from before)
+    PartOf=graphical-session.target
+    After=graphical-session.target
+    ConditionUser=!@system
+    [Service]
+    ExecStart=/etc/nami-os/backup/notice
+    [Install]
+    WantedBy=graphical-session.target
+  /etc/systemd/user/nami-backup-notice.path: |
+    [Unit]
+    Description=Watches this computer's backups
+    PartOf=graphical-session.target
+    ConditionUser=!@system
+    [Path]
+    PathChanged=/var/lib/nami-backup/said
+    Unit=nami-backup-notice.service
+    [Install]
+    WantedBy=graphical-session.target

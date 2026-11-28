@@ -1,0 +1,32 @@
+# avahi: names on the local network (computer.local) and the printers and
+# scanners there. nixpkgs' avahi has no services of its own (NixOS writes
+# them), so they're here. resolved leaves .local to it.
+services:
+  - avahi-daemon.service
+files:
+  /etc/sysusers.d/avahi.conf: |
+    u avahi - "avahi" /var/empty
+  /etc/systemd/resolved.conf.d/avahi.conf: |
+    [Resolve]
+    MulticastDNS=no
+  /etc/systemd/system/avahi-daemon.socket: |
+    [Unit]
+    Description=Avahi mDNS/DNS-SD Stack Activation Socket
+    [Socket]
+    ListenStream=/run/avahi-daemon/socket
+    [Install]
+    WantedBy=sockets.target
+  /etc/systemd/system/avahi-daemon.service: |
+    [Unit]
+    Description=Avahi mDNS/DNS-SD Stack
+    Requires=avahi-daemon.socket
+    [Service]
+    Type=dbus
+    BusName=org.freedesktop.Avahi
+    NotifyAccess=main
+    ExecStart=/run/current-system/sw/bin/avahi-daemon --syslog
+    RuntimeDirectory=avahi-daemon
+    RuntimeDirectoryPreserve=yes
+    [Install]
+    WantedBy=multi-user.target
+    Also=avahi-daemon.socket

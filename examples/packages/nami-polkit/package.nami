@@ -1,0 +1,15 @@
+# What a change for everyone on the computer asks for: an admin's password,
+# there and then (polkit's action org.namios.change-computer). nami's daemon
+# asks it before it changes the computer's file for an admin (Settings'
+# switches, People, apps for everyone, going back a step): the desktop's box
+# asks, or the terminal. Once it's given, the next few minutes' changes
+# (the rest of the same change) don't ask again. `desktop` lists it.
+name: nami-polkit
+version: "1.0"
+source:
+  path: ./actions
+install: |
+  install -Dm644 org.namios.change-computer.policy $out/share/polkit-1/actions/org.namios.change-computer.policy
+  # Its older name, until 1.0: an older daemon still running (before the
+  # update restarts it) asks for this one.
+  install -Dm644 org.trayos.change-computer.policy $out/share/polkit-1/actions/org.trayos.change-computer.policy

@@ -1,0 +1,7 @@
+# How to tell secure-boot works, on a computer nami made (tests/usb.sh runs these).
+"Secure Boot: the computer's own key, root's only":
+  run: stat -c '%n %a' /nix/var/nami/secure-boot/key.pem
+  expect: "key.pem 600"
+"Secure Boot: mokutil says what it is":
+  run: mokutil --sb-state 2>&1
+  expect: "Secure ?Boot"

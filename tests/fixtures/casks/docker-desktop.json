@@ -1,0 +1,307 @@
+{
+ "token": "docker-desktop",
+ "name": [
+  "Docker Desktop",
+  "Docker Community Edition",
+  "Docker CE"
+ ],
+ "desc": "App to build and share containerised applications and microservices",
+ "homepage": "https://www.docker.com/products/docker-desktop",
+ "url": "https://desktop.docker.com/mac/main/arm64/245822/Docker.dmg",
+ "url_specs": {},
+ "version": "4.99.0,245822",
+ "sha256": "0ede7f9917b55c396a17b03c069cadf457a7d21904bc264c6d398fe132da7fb9",
+ "artifacts": [
+  {
+   "uninstall": [
+    {
+     "quit": "x"
+    }
+   ]
+  },
+  {
+   "app": [
+    "Docker.app"
+   ],
+   "target": "/Applications/Docker.app"
+  },
+  {
+   "binary": [
+    "$APPDIR/Docker.app/Contents/Resources/bin/docker-credential-desktop",
+    {
+     "target": "/usr/local/bin/docker-credential-desktop"
+    }
+   ],
+   "target": "/usr/local/bin/docker-credential-desktop"
+  },
+  {
+   "binary": [
+    "$APPDIR/Docker.app/Contents/Resources/bin/docker-credential-osxkeychain",
+    {
+     "target": "/usr/local/bin/docker-credential-osxkeychain"
+    }
+   ],
+   "target": "/usr/local/bin/docker-credential-osxkeychain"
+  },
+  {
+   "binary": [
+    "$APPDIR/Docker.app/Contents/Resources/bin/kubectl",
+    {
+     "target": "/usr/local/bin/kubectl.docker"
+    }
+   ],
+   "target": "/usr/local/bin/kubectl.docker"
+  },
+  {
+   "binary": [
+    "$APPDIR/Docker.app/Contents/Resources/cli-plugins/docker-compose",
+    {
+     "target": "/usr/local/cli-plugins/docker-compose"
+    }
+   ],
+   "target": "/usr/local/cli-plugins/docker-compose"
+  },
+  {
+   "binary": [
+    "$APPDIR/Docker.app/Contents/Resources/bin/docker",
+    {
+     "target": "/usr/local/bin/docker"
+    }
+   ],
+   "target": "/usr/local/bin/docker"
+  },
+  {
+   "bash_completion": [
+    "$APPDIR/Docker.app/Contents/Resources/etc/docker.bash-completion"
+   ],
+   "target": "$HOMEBREW_PREFIX/etc/bash_completion.d/docker"
+  },
+  {
+   "bash_completion": [
+    "$APPDIR/Docker.app/Contents/Resources/etc/docker-compose.bash-completion"
+   ],
+   "target": "$HOMEBREW_PREFIX/etc/bash_completion.d/docker-compose"
+  },
+  {
+   "zsh_completion": [
+    "$APPDIR/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion"
+   ],
+   "target": "$HOMEBREW_PREFIX/share/zsh/site-functions/_docker-compose"
+  },
+  {
+   "zsh_completion": [
+    "$APPDIR/Docker.app/Contents/Resources/etc/docker.zsh-completion"
+   ],
+   "target": "$HOMEBREW_PREFIX/share/zsh/site-functions/_docker"
+  },
+  {
+   "fish_completion": [
+    "$APPDIR/Docker.app/Contents/Resources/etc/docker-compose.fish-completion"
+   ],
+   "target": "$HOMEBREW_PREFIX/share/fish/vendor_completions.d/docker-compose.fish"
+  },
+  {
+   "fish_completion": [
+    "$APPDIR/Docker.app/Contents/Resources/etc/docker.fish-completion"
+   ],
+   "target": "$HOMEBREW_PREFIX/share/fish/vendor_completions.d/docker.fish"
+  },
+  {
+   "postflight_steps": [
+    {
+     "steps": [
+      {
+       "source": {
+        "path": "{{appdir}}/Docker.app/Contents/Resources/bin/kubectl"
+       },
+       "target": {
+        "path": "/usr/local/bin/kubectl"
+       },
+       "force": true,
+       "uninstall": true,
+       "sudo": "if_needed",
+       "guards": [
+        {
+         "path": "/usr/local/bin/kubectl",
+         "condition": "unless_exists",
+         "id": "1"
+        }
+       ],
+       "type": "symlink"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "zap": [
+    {
+     "trash": [
+      "~/Library/Preferences/x.plist"
+     ]
+    }
+   ]
+  }
+ ],
+ "caveats": null,
+ "depends_on": {
+  "macos": {
+   ">=": [
+    "14"
+   ]
+  }
+ },
+ "container": null,
+ "auto_updates": true,
+ "deprecated": false,
+ "deprecation_reason": null,
+ "disabled": false,
+ "disable_reason": null,
+ "variations": {
+  "sequoia": {
+   "url": "https://desktop.docker.com/mac/main/amd64/245822/Docker.dmg",
+   "sha256": "0584a21e7503a4e12e25c7c829ef9439ceca6f453842e47ade9d1961c2fbd2af",
+   "artifacts": [
+    {
+     "uninstall": [
+      {
+       "quit": "x"
+      }
+     ]
+    },
+    {
+     "app": [
+      "Docker.app"
+     ],
+     "target": "/Applications/Docker.app"
+    },
+    {
+     "binary": [
+      "$APPDIR/Docker.app/Contents/Resources/bin/docker-credential-desktop",
+      {
+       "target": "/usr/local/bin/docker-credential-desktop"
+      }
+     ],
+     "target": "/usr/local/bin/docker-credential-desktop"
+    },
+    {
+     "binary": [
+      "$APPDIR/Docker.app/Contents/Resources/bin/docker-credential-osxkeychain",
+      {
+       "target": "/usr/local/bin/docker-credential-osxkeychain"
+      }
+     ],
+     "target": "/usr/local/bin/docker-credential-osxkeychain"
+    },
+    {
+     "binary": [
+      "$APPDIR/Docker.app/Contents/Resources/bin/com.docker.hyperkit",
+      {
+       "target": "/usr/local/bin/hyperkit"
+      }
+     ],
+     "target": "/usr/local/bin/hyperkit"
+    },
+    {
+     "binary": [
+      "$APPDIR/Docker.app/Contents/Resources/cli-plugins/docker-compose",
+      {
+       "target": "/usr/local/cli-plugins/docker-compose"
+      }
+     ],
+     "target": "/usr/local/cli-plugins/docker-compose"
+    },
+    {
+     "binary": [
+      "$APPDIR/Docker.app/Contents/Resources/bin/kubectl",
+      {
+       "target": "/usr/local/bin/kubectl.docker"
+      }
+     ],
+     "target": "/usr/local/bin/kubectl.docker"
+    },
+    {
+     "binary": [
+      "$APPDIR/Docker.app/Contents/Resources/bin/docker",
+      {
+       "target": "/usr/local/bin/docker"
+      }
+     ],
+     "target": "/usr/local/bin/docker"
+    },
+    {
+     "bash_completion": [
+      "$APPDIR/Docker.app/Contents/Resources/etc/docker.bash-completion"
+     ],
+     "target": "$HOMEBREW_PREFIX/etc/bash_completion.d/docker"
+    },
+    {
+     "bash_completion": [
+      "$APPDIR/Docker.app/Contents/Resources/etc/docker-compose.bash-completion"
+     ],
+     "target": "$HOMEBREW_PREFIX/etc/bash_completion.d/docker-compose"
+    },
+    {
+     "zsh_completion": [
+      "$APPDIR/Docker.app/Contents/Resources/etc/docker-compose.zsh-completion"
+     ],
+     "target": "$HOMEBREW_PREFIX/share/zsh/site-functions/_docker-compose"
+    },
+    {
+     "zsh_completion": [
+      "$APPDIR/Docker.app/Contents/Resources/etc/docker.zsh-completion"
+     ],
+     "target": "$HOMEBREW_PREFIX/share/zsh/site-functions/_docker"
+    },
+    {
+     "fish_completion": [
+      "$APPDIR/Docker.app/Contents/Resources/etc/docker-compose.fish-completion"
+     ],
+     "target": "$HOMEBREW_PREFIX/share/fish/vendor_completions.d/docker-compose.fish"
+    },
+    {
+     "fish_completion": [
+      "$APPDIR/Docker.app/Contents/Resources/etc/docker.fish-completion"
+     ],
+     "target": "$HOMEBREW_PREFIX/share/fish/vendor_completions.d/docker.fish"
+    },
+    {
+     "postflight_steps": [
+      {
+       "steps": [
+        {
+         "source": {
+          "path": "{{appdir}}/Docker.app/Contents/Resources/bin/kubectl"
+         },
+         "target": {
+          "path": "/usr/local/bin/kubectl"
+         },
+         "force": true,
+         "uninstall": true,
+         "sudo": "if_needed",
+         "guards": [
+          {
+           "path": "/usr/local/bin/kubectl",
+           "condition": "unless_exists",
+           "id": "1"
+          }
+         ],
+         "type": "symlink"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "zap": [
+      {
+       "trash": [
+        "~/Library/Preferences/x.plist"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

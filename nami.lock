@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "catalog": {
+    "source": "https://namios.dev/menu/55bfb4d7437b/index-x86_64-linux.json.xz",
+    "sha256": "58372c6923ebc05faa93f424b76f8356c541273c7c049370211ecdf67f7ea458"
+  },
+  "packages": {
+    "cargo": {
+      "name": "cargo-1.98.1",
+      "paths": [
+        "/nix/store/gmgfpzc0w2pgby0lmq9r88m39albiyfw-cargo-1.98.1"
+      ]
+    },
+    "clippy": {
+      "name": "clippy-1.98.1",
+      "paths": [
+        "/nix/store/6gm66glch86pxdpmbrn6qrg9m1jyj2vm-clippy-1.98.1"
+      ]
+    },
+    "fontconfig": {
+      "name": "fontconfig-2.18.3",
+      "paths": [
+        "/nix/store/kcppfgrlcc6vccvy55gqipcv6gnn57pa-fontconfig-2.18.3-bin"
+      ]
+    },
+    "freetype": {
+      "name": "freetype-2.14.3",
+      "paths": [
+        "/nix/store/81xfxjiw58spk795jgcc7z1diwmy3xmi-freetype-2.14.3"
+      ]
+    },
+    "gcc": {
+      "name": "gcc-wrapper-16.2.0",
+      "paths": [
+        "/nix/store/j1938gsbvbhkyz4kbmvjk56r479mkw3s-gcc-wrapper-16.2.0"
+      ]
+    },
+    "libxcb": {
+      "name": "libxcb-1.17.0",
+      "paths": [
+        "/nix/store/cvr8yyrrqnjxgd7bs6lwgra4qma7kwl9-libxcb-1.17.0"
+      ]
+    },
+    "libxkbcommon": {
+      "name": "libxkbcommon-1.13.2",
+      "paths": [
+        "/nix/store/nvrv5w6rhc39h8snrsw03nqs679cf7rh-libxkbcommon-1.13.2"
+      ]
+    },
+    "pkg-config": {
+      "name": "pkg-config-wrapper-0.29.2",
+      "paths": [
+        "/nix/store/b9izmrfjp0qnnyahdwwrzdwi87s1h179-pkg-config-wrapper-0.29.2"
+      ]
+    },
+    "podman": {
+      "name": "podman-5.8.8",
+      "paths": [
+        "/nix/store/w1vdk5f51k2c3lfpvp8f0vf8pw5063gd-podman-5.8.8"
+      ]
+    },
+    "python3": {
+      "name": "python3-3.14.7",
+      "paths": [
+        "/nix/store/lb41b0anx1f98y9y5s9mdv97gjgsq740-python3-3.14.7"
+      ]
+    },
+    "qemu_kvm": {
+      "name": "qemu-host-cpu-only-11.1.2",
+      "paths": [
+        "/nix/store/lrgsfi7yl3z9pnpgvpi0hpm4xrip1246-qemu-host-cpu-only-11.1.2"
+      ]
+    },
+    "rclone": {
+      "name": "rclone-1.75.2",
+      "paths": [
+        "/nix/store/p4x1zk537d2lndx91ca289nm0q4fpd14-rclone-1.75.2"
+      ]
+    },
+    "rust-analyzer": {
+      "name": "rust-analyzer-2026-10-12",
+      "paths": [
+        "/nix/store/x7yg84s2xwmrd5fvw9j9fn4c1izx10d2-rust-analyzer-2026-10-12"
+      ]
+    },
+    "rustc": {
+      "name": "rustc-wrapper-1.98.1",
+      "paths": [
+        "/nix/store/hr3npzrq9l029s5hf948by203m6qz3lw-rustc-wrapper-1.98.1"
+      ]
+    },
+    "rustfmt": {
+      "name": "rustfmt-1.98.1",
+      "paths": [
+        "/nix/store/9a9y1zij83al5wqvdhx7lrs9b8cqv688-rustfmt-1.98.1"
+      ]
+    },
+    "virtiofsd": {
+      "name": "virtiofsd-1.14.0",
+      "paths": [
+        "/nix/store/l2p5dsfaidkpdjzfwjzxpkpkav5l8vh4-virtiofsd-1.14.0"
+      ]
+    },
+    "vulkan-loader": {
+      "name": "vulkan-loader-1.4.357.0",
+      "paths": [
+        "/nix/store/vjdqsn0bz2llabfqa746zfgk4kmswba5-vulkan-loader-1.4.357.0"
+      ]
+    },
+    "wayland": {
+      "name": "wayland-1.26.0",
+      "paths": [
+        "/nix/store/li1008zymvj7sz8jkdk9brkslfq9jy8w-wayland-1.26.0"
+      ]
+    }
+  }
+}

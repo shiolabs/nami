@@ -1,0 +1,162 @@
+# What every computer nami makes has, with a desktop or without one:
+# desktop lists it first (a server's system.nami: `- base`).
+# Leave one out with `without: [name]` in your system.nami.
+# Sound and graphics devices, for everyone.
+groups:
+  audio: everyone
+  video: everyone
+packages:
+  # Starting up and running: systemd, logins, the shell, the basics.
+  - systemd
+  - util-linux.bin
+  - util-linux.login
+  - bash
+  - coreutils
+  - hostname-debian
+  - kmod
+  - shadow
+  - shadow.su
+  - linux-pam
+  - e2fsprogs.bin
+  - dosfstools
+  - fuse3
+  - dbus
+  - dbus-broker
+  - sudo
+  - nsncd
+  - procps
+  - kbd
+  - glibcLocales
+  - tzdata
+  - cacert
+  - openssl.bin
+  # The processor's fixes (microcode), loaded first thing, as on Ubuntu.
+  - microcode-intel
+  - microcode-amd
+  - wireless-regdb
+  # The network: NetworkManager (Wi-Fi, cable, VPN), names on the local
+  # network (avahi), phones and modems.
+  - networkmanager
+  - wpa_supplicant
+  - iproute2
+  - iputils
+  - iw
+  - avahi
+  - nssmdns
+  - wireguard-tools
+  - modemmanager
+  - usb-modeswitch
+  - openssh
+  - curl
+  - git
+  # Hardware: Bluetooth, Thunderbolt, firmware updates, keeping cool.
+  - bluez
+  - bolt
+  - fwupd
+  - thermald
+  - pciutils
+  # Devices' names (lspci, nami doctor --about, the window's This computer).
+  - hwdata
+  - usbutils
+  # Command-line tools Ubuntu has.
+  - gnugrep
+  - gnused
+  - gawk
+  - findutils
+  - diffutils
+  - less
+  - nano
+  - which
+  - getent
+  - file
+  - man
+  - ncurses
+  - gzip
+  - xz
+  - zstd
+  - gnutar
+  - unzip
+  - zip
+  - rsync
+  - bc
+  - wget
+  - lsof
+  - strace
+  - psmisc
+  - vim
+  - gnupg
+  - python3
+  - perl
+  - glibc.bin
+  - traceroute
+  - mtr
+  - netcat-openbsd
+  - dnsutils.dnsutils
+  - dnsutils.host
+  - nftables
+  # Encrypted disks (nami install-to --encrypt).
+  - cryptsetup
+  # The firmware's boot menu (nami install-to adds the disk to it).
+  - efibootmgr
+  # Next to Windows (nami install-to --next-to-windows): NTFS, for making
+  # C: smaller, and Windows' files readable from here.
+  - ntfs3g
+  # Secure Boot, and swapping to compressed memory.
+  - secure-boot
+  - zram-swap
+  # Programs built for other distributions (prebuilt ones from GitHub, npm, pip):
+  # their loader at /lib64, and the libraries they link to.
+  - other-linuxes
+drivers:
+  # The kernel's firmware, for Wi-Fi, graphics and the rest (compressed).
+  firmware: [linux-firmware]
+boot:
+  microcode: [intel-ucode.img, amd-ucode.img]
+# Updates by themselves: once a day the newest catalog, and a new version
+# of the system for the next start if anything changed. Nothing changes
+# under anyone working; the version before stays in the boot menu, and
+# starts by itself if the new one can't. Off: `mask: [nami-update.timer]`.
+services:
+  - nami-update.timer
+files:
+  # Names on the local network come from avahi (mDNS, computer.local), as
+  # on a Mac: not also LLMNR, Windows' older way, which answers anyone on
+  # the network who asks for a name (and can be lied to, to catch
+  # passwords). Off, it listens on no port.
+  /etc/systemd/resolved.conf.d/llmnr.conf: |
+    [Resolve]
+    LLMNR=no
+  # Where the kernel's own code is in memory isn't shown to everyone (it
+  # helps an attack get round the kernel's defences), as on Ubuntu.
+  /etc/sysctl.d/10-nami-hardening.conf: |
+    kernel.kptr_restrict = 1
+  # Where systemd looks for the locales (`localectl list-locales`, the
+  # languages a computer can be set to): glibc's, every language's.
+  /etc/tmpfiles.d/locale.conf: |
+    L+ /usr/lib/locale/locale-archive - - - - /run/current-system/sw/lib/locale/locale-archive
+  # A new version is kept once it has started fine; that's written on
+  # the boot partition, which may be mounted a moment after the rest
+  # (it's nofail): wait for it.
+  /etc/systemd/system/systemd-bless-boot.service.d/nami.conf: |
+    [Unit]
+    RequiresMountsFor=/boot
+  /etc/systemd/system/nami-update.service: |
+    [Unit]
+    Description=Updates for this computer, for its next start
+    Wants=network-online.target
+    After=network-online.target
+    [Service]
+    Type=oneshot
+    ExecStart=/nix/var/nami/bin/nami os-update
+    Nice=19
+    IOSchedulingClass=idle
+    TimeoutStartSec=3h
+  /etc/systemd/system/nami-update.timer: |
+    [Unit]
+    Description=Updates for this computer, daily
+    [Timer]
+    OnCalendar=daily
+    RandomizedDelaySec=2h
+    Persistent=true
+    [Install]
+    WantedBy=timers.target

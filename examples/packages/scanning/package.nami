@@ -1,0 +1,7 @@
+# Scanning, as Ubuntu has it: SANE with HP's drivers (hplip, in
+# printing) and driverless network and USB scanners (eSCL and WSD:
+# sane-airscan; ipp-usb, in printing). How SANE finds its drivers is
+# in packages/sane-backends/package.nami. desktop lists this.
+packages:
+  - sane-backends
+  - sane-airscan

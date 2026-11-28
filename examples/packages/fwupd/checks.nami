@@ -1,0 +1,7 @@
+# How to tell fwupd works, on a computer nami made (tests/usb.sh runs these).
+"firmware updates: fwupd":
+  run: fwupdmgr --version 2>&1 | grep -m1 fwupd
+  expect: "fwupd"
+"firmware updates: the daemon answers, with LVFS (Linux Vendor Firmware Service) on":
+  run: timeout 60 fwupdmgr get-remotes 2>&1 | grep -A2 'Remote ID. *lvfs$' | grep -c 'Enabled. *true' | sed 's/^/N=/'
+  expect: "N=1"

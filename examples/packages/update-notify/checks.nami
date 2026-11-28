@@ -1,0 +1,13 @@
+# How to tell update-notify works, on a computer nami made (tests/usb.sh runs these).
+"updates: the computer knows whether one is waiting for the next start":
+  run: echo $(systemctl is-active nami-update-state.service) $(/etc/nami-os/update/state --check)
+  expect: "^active (nothing waiting|version [0-9]+ is waiting)"
+"updates: each person's desktop is told (at login, and when one is ready)":
+  run: systemctl --user is-enabled nami-update-notify.service nami-update-notify.path | tr '\n' ' '
+  expect: "^enabled enabled"
+"updates: Software Updates, in the app list":
+  run: n=0; for d in $(echo "$XDG_DATA_DIRS" | tr ':' ' '); do grep -qx 'Exec=nami-gui --page updates' "$d/applications/nami-software-updates.desktop" 2>/dev/null && n=$((n + 1)); done; echo FOUND=$n $(test -x /etc/nami-os/update/now && echo RUNS)
+  expect: "^FOUND=1 RUNS"
+"updates: each person's apps from downloads update daily too (on the same switch)":
+  run: echo $(systemctl --user is-enabled nami-app-updates.timer) $(systemctl --user cat nami-app-updates.service 2>/dev/null | grep -c 'file-apps --update --background')
+  expect: "^enabled 1"

@@ -1,0 +1,18 @@
+# How to tell nami's window is there, on a computer nami made (tests/usb.sh runs these).
+"nami's window: nami-gui, in the app list":
+  run: command -v nami-gui && ls /run/current-system/sw/share/applications/nami-gui.desktop
+  expect: "nami-gui.desktop$"
+# (Root's to write: nami changes it for them, once they've given their password; tests/vm-quick.sh
+# tries that, with tests/lib/namios-admin-check.sh.)
+"in the desktop: an admin reads the computer's file, which is root's to write and the admins' alone":
+  run: f=/etc/nami/system.nami; head -1 $f >/dev/null && printf "reads "; [ -w $f ] || printf "root's "; stat -L -c %a:%U:%G $f
+  expect: "reads root's 640:root:wheel$"
+"in the desktop: Install edits a file's text as applied, not the file (only that app goes on; other changes stay waiting)":
+  run: f=~/user.nami; b=$(cat $f); printf 'packages:\n  - cowsay\n' | nami config json '{"add":{"path":["packages"],"value":"xeyes"}}' --file - | tr '\n' ' '; [ "$(cat $f)" = "$b" ] && echo same
+  expect: "cowsay +- xeyes +same$"
+"in the desktop: Settings is one window, opened by its key's command, and not twice":
+  run: ( export NIRI_SOCKET=$(ls /run/user/$(id -u)/niri.*.sock | head -1); o() { niri msg -j windows | jq '[.[] | select(.title == "Settings")] | length'; }; a=$(o); nami-desktop settings; sleep 5; nami-desktop settings; sleep 2; b=$(o); echo "before=$a after=$b" )
+  expect: "after=1$"
+"in the desktop: Settings started again while it's still opening is still one window":
+  run: ( export NIRI_SOCKET=$(ls /run/user/$(id -u)/niri.*.sock | head -1); o() { niri msg -j windows | jq '[.[] | select(.app_id == "nami-gui" and .title == "Settings")] | length'; }; for w in $(niri msg -j windows | jq '.[] | select(.app_id == "nami-gui" and .title == "Settings") | .id'); do niri msg action close-window --id "$w"; done; sleep 3; nami-desktop settings; niri msg action spawn -- nami-gui; sleep 1; nami-desktop settings; niri msg action spawn -- nami-gui --apps; sleep 25; echo "settings=$(o) running=$(pgrep -u "$(id -u)" -xa nami-gui | grep -vc -- --welcome)" )
+  expect: "^settings=1 running=1$"

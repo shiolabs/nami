@@ -1,0 +1,68 @@
+{
+ "token": "zoom",
+ "name": [
+  "Zoom"
+ ],
+ "desc": "Video communication and virtual meeting platform",
+ "homepage": "https://www.zoom.us/",
+ "url": "https://cdn.zoom.us/prod/7.2.5.90525/arm64/zoomusInstallerFull.pkg",
+ "url_specs": {},
+ "version": "7.2.5.90525",
+ "sha256": "4c26ebed8bd29ce258ac9dbe0f2b327fad0a0734246ea588339a2cc5fd10533e",
+ "artifacts": [
+  {
+   "uninstall": [
+    {
+     "quit": "x"
+    }
+   ]
+  },
+  {
+   "pkg": [
+    "zoomusInstallerFull.pkg"
+   ]
+  },
+  {
+   "postflight_steps": [
+    {
+     "steps": [
+      {
+       "name": "/Applications/zoom.us.app",
+       "match": "full",
+       "attempts": 3,
+       "notices": [
+        "The Zoom package postinstall script launches the Zoom app",
+        "Attempting to close zoom.us.app to avoid unwanted user intervention"
+       ],
+       "failure_message": "Unable to forcibly close zoom.us.app",
+       "type": "terminate_process"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "zap": [
+    {
+     "trash": [
+      "~/Library/Preferences/x.plist"
+     ]
+    }
+   ]
+  }
+ ],
+ "caveats": null,
+ "depends_on": {},
+ "container": null,
+ "auto_updates": true,
+ "deprecated": false,
+ "deprecation_reason": null,
+ "disabled": false,
+ "disable_reason": null,
+ "variations": {
+  "sequoia": {
+   "url": "https://cdn.zoom.us/prod/7.2.5.90525/zoomusInstallerFull.pkg",
+   "sha256": "1750c316d15ed69d8fc8bfd3720b2c366291bd29144d6cb7c0032cd9b92114cb"
+  }
+ }
+}

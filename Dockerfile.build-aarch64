@@ -1,0 +1,9 @@
+# The bundle runtime for ARM computers (aarch64), from this x86_64 one:
+# Rust's own aarch64 musl target, and Zig as the C compiler and linker for
+# zstd's C code (it carries musl for every target). build.sh --arch aarch64.
+FROM rust:1-alpine
+RUN apk add --no-cache build-base zig && rustup target add aarch64-unknown-linux-musl
+RUN printf '#!/bin/sh\n# zig cc for aarch64 musl, without the flags it does not take\nfor a; do shift; case $a in --target=*|-Wl,--fix-cortex-a53-843419|-lgcc_s|*crt1.o|*crti.o|*crtn.o|*crtbegin*.o|*crtend*.o) ;; *) set -- "$@" "$a" ;; esac; done\nexec zig cc -target aarch64-linux-musl "$@"\n' > /usr/local/bin/aarch64-zigcc && chmod +x /usr/local/bin/aarch64-zigcc
+ENV CC_aarch64_unknown_linux_musl=aarch64-zigcc \
+    AR_aarch64_unknown_linux_musl="zig ar" \
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-zigcc

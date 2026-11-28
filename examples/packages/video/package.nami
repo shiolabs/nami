@@ -1,0 +1,7 @@
+# Video and sound: edit videos, record and stream, make music.
+# Others: shotcut, ardour, lmms, musescore, davinci-resolve.
+packages:
+  - kdePackages.kdenlive
+  - obs-studio
+  - audacity
+  - handbrake        # converting videos

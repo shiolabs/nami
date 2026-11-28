@@ -1,0 +1,10 @@
+# How to tell other-linuxes works, on a computer nami made (tests/usb.sh runs these).
+"programs built for other distributions start with nix-ld, which has the system's glibc":
+  run: echo "$(readlink /lib64/ld-linux-x86-64.so.2) $(readlink -f /run/current-system/sw/share/nix-ld/lib/ld.so)"
+  expect: "nix-ld-[0-9.]+/libexec/nix-ld /nix/store/[a-z0-9]{32}-glibc-[0-9.-]+/lib/ld-linux-x86-64\\.so\\.2$"
+"and find their libraries: C++'s, zlib, OpenSSL, curl, glibc's old libcrypt and ncurses'":
+  run: (cd /run/current-system/sw/share/nix-ld/lib && ls libstdc++.so.6 libgcc_s.so.1 libz.so.1 libssl.so.3 libcurl.so.4 libcrypt.so.1 libtinfo.so.5 libuuid.so.1 libudev.so.1 >/dev/null && echo "SET-OK $(ls | wc -l)")
+  expect: "^SET-OK [0-9]{3,}$"
+"where they look: the set, the graphics driver's, the person's own (not on everyone's LD_LIBRARY_PATH)":
+  run: env -i HOME=/tmp /run/current-system/sw/bin/bash -lc 'case "$LD_LIBRARY_PATH" in *nix-ld*) echo LEAKS;; *) echo OWN;; esac; echo "NIX_LD=$NIX_LD_LIBRARY_PATH"' 2>/dev/null | tr '\n' ' '
+  expect: "^OWN NIX_LD=/run/current-system/sw/share/nix-ld/lib:/run/opengl-driver/lib:/tmp/.local/state/nami/libraries $"

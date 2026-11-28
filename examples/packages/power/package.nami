@@ -1,0 +1,8 @@
+# Power, as Ubuntu has it: the battery (upower), power modes (balanced,
+# saver, performance: power-profiles-daemon), and laptops with two GPUs
+# (switcheroo-control). Suspend is systemd's, and the brightness keys
+# the desktop's. desktop lists this.
+packages:
+  - upower
+  - power-profiles-daemon
+  - switcheroo-control

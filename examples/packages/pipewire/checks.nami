@@ -1,0 +1,7 @@
+# How to tell pipewire works, on a computer nami made (tests/usb.sh runs these).
+"pipewire: ALSA's default is PipeWire":
+  run: aplay -L | grep -A1 -x default | tail -1
+  expect: "PipeWire"
+"in the desktop: pipewire: ALSA programs play through it":
+  run: timeout 10 aplay -q -D pipewire -f cd -d 1 /dev/zero; echo played=$?
+  expect: "^played=0$"

@@ -1,0 +1,7 @@
+# marked: A markdown parser built for speed (https://github.com/markedjs/marked)
+# By `nami recipe from-url https://github.com/markedjs/marked --version 18.3.0`: a Node.js project, built with npm; its packages come as its package-lock.json pins them.
+# Its sha256 is in nami.lock, next to this file. Check it, then: nami build ./node-marked
+name: marked
+version: 18.3.0
+source:
+  url: https://github.com/markedjs/marked/archive/refs/tags/v18.3.0.tar.gz

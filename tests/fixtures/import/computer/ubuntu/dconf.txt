@@ -1,0 +1,57 @@
+[ca/desrt/dconf-editor]
+saved-view='/'
+
+[org/gnome/control-center]
+last-panel='wifi'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/warty-final-ubuntu.png'
+picture-options='zoom'
+
+[org/gnome/desktop/input-sources]
+mru-sources=[('xkb', 'us')]
+sources=[('xkb', 'dk'), ('xkb', 'us')]
+xkb-options=['caps:escape']
+
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Yaru-dark'
+clock-show-weekday=true
+text-scaling-factor=1.25
+
+[org/gnome/desktop/peripherals/touchpad]
+tap-to-click=true
+two-finger-scrolling-enabled=true
+
+[org/gnome/desktop/wm/keybindings]
+switch-to-workspace-1=['<Super>1']
+close=['<Super>q']
+
+[org/gnome/evolution-data-server]
+migrated=true
+
+[org/gnome/nautilus/window-state]
+initial-size=(890, 550)
+maximized=false
+
+[org/gnome/settings-daemon/plugins/color]
+night-light-enabled=true
+night-light-temperature=uint32 3700
+
+[org/gnome/settings-daemon/plugins/media-keys]
+custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
+binding='<Super>Return'
+command='ptyxis'
+name='Terminal'
+
+[org/gnome/shell]
+command-history=['firefox']
+enabled-extensions=['ubuntu-dock@ubuntu.com', 'ding@rastersoft.com', 'caffeine@patapon.info']
+favorite-apps=['firefox_firefox.desktop', 'org.gnome.Nautilus.desktop', 'code_code.desktop', 'com.spotify.Client.desktop', 'snap-store_snap-store.desktop']
+welcome-dialog-last-shown-version='46.0'
+
+[org/gnome/shell/extensions/dash-to-dock]
+dock-position='BOTTOM'
+dash-max-icon-size=40

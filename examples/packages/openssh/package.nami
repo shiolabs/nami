@@ -1,0 +1,4 @@
+# OpenSSH: logging in from another computer (sshd), with the password
+# (a finger can't be from afar).
+login:
+  sshd: password

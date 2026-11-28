@@ -1,0 +1,86 @@
+[package]
+name = "nami-gui"
+version = "0.1.0"
+edition = "2024"
+description = "Make a USB drive of a whole computer: nami usb, with a window"
+license = "MIT"
+publish = false
+
+[dependencies]
+gpui = { package = "gpui-pre", version = "=0.3.9" }
+# "font-kit": a Mac's text (CoreText). Without it gpui's macOS part has no text system and draws
+# no letters at all; it's not one of gpui-pre-platform's defaults. (Nothing on Linux or Windows.)
+gpui_platform = { package = "gpui-pre-platform", version = "=0.3.9", features = ["wayland", "x11", "font-kit"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+futures = "0.3"
+unicode-segmentation = "1"
+# namios-installer's: the release (signed checksums), the download, unpacking it.
+ureq = { version = "2", default-features = false, features = ["tls"] }
+lzma-rs = "0.3"
+sha2 = "0.10"
+ed25519-dalek = "2"
+base64 = "0.22"
+# Reading namiOS's boot files out of its image (next to Windows); writing your files there.
+fatfs = { version = "0.3", default-features = false, features = ["std", "alloc"] }
+# nami files, changed in place (src/config_edit.rs): the installer's computer.nami, nami-gui's.
+serde_yaml = "0.9"
+# Where each value is written (src/yaml_text.rs, for config_edit.rs).
+unsafe-libyaml = "0.2"
+anyhow = "1"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+# nami-desktop's: the system tray, over D-Bus; apps' own icon pictures.
+uuid = { version = "1", features = ["v5"] }
+zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+# A wallpaper drawn from its SVG, at the size of the screen.
+resvg = { version = "0.46", default-features = false }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# gpui's Linux part itself, as namiOS has it (vendor/gpui-pre-linux): Alt+Tab keeping niri's
+# keys back while it's open.
+gpui_linux = { package = "gpui-pre-linux", version = "=0.3.9" }
+# gpui's text, as namiOS has it (vendor/gpui-pre-wgpu): letters spaced by their size
+# (`look::set_type`).
+gpui_wgpu = { package = "gpui-pre-wgpu", version = "=0.3.9" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+plist = "1"
+# nami.app's About panel (src/mac.rs): macOS's own, from its Info.plist. (gpui's, already.)
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSApplication", "NSResponder"] }
+
+[[bin]]
+name = "nami-gui"
+path = "src/main.rs"
+
+[profile.release]
+strip = true
+
+# gpui's Windows part, its build.rs made to build Windows' shaders on Linux
+# too (in WSL, with Windows' own compiler: packaging/fxc-wsl.sh).
+[patch.crates-io]
+gpui-pre-windows = { path = "vendor/gpui-pre-windows" }
+# gpui's Linux part, its Wayland keyboard made to keep the window that has the keyboard when
+# another of its windows is told it's lost it (that window's keys went nowhere, though it was
+# still active), to say when a key has no window to go to ($XDG_RUNTIME_DIR/
+# nami-desktop-keys-lost), and to let a layer surface hold the compositor's keys back
+# (`gpui_linux::inhibit_shortcuts_in`), and to say when fingers lift off a touchpad (a scroll of
+# nothing, `TouchPhase::Ended`, for a swipe to be thrown). Marked "namiOS:".
+gpui-pre-linux = { path = "vendor/gpui-pre-linux" }
+# gpui's text, an emoji font it's asked for by name drawn as the font (in colour), not left
+# for a fallback that has black-and-white ones first (the emoji picker); letters spaced by
+# their size, as the program says (`set_tracking`). Marked "namiOS:".
+gpui-pre-wgpu = { path = "vendor/gpui-pre-wgpu" }
+# gpui itself, a press that's moved off what was pressed no longer looking pressed (`.active`
+# while the pointer's back on it only: `ElementClickedState::away`, look.rs's `Press`); every
+# button let go told to the app (`App::observe_mouse_ups`: a menu opened by a press hears where
+# it ended); `Window::with_element_opacity` public (a list's items fading to new places). Marked
+# "namiOS:".
+gpui-pre = { path = "vendor/gpui-pre" }
+# fatfs, a new directory's "." and ".." written without long names before them, so the boot
+# partition's nami-seed/ (stick/seed.rs) is a directory fsck.fat and chkdsk take as it is.
+# Marked "namiOS:".
+fatfs = { path = "vendor/fatfs" }

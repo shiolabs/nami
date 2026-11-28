@@ -1,0 +1,22 @@
+# Developing nami, with nami: `nami shell` here, or `nami run test`.
+# How to work on it: CONTRIBUTING.md.
+packages:
+  - rustc
+  - cargo
+  - rustfmt
+  - clippy
+  - rust-analyzer
+  - gcc
+  - pkg-config
+  # The tests' containers.
+  - podman
+  - python3
+env:
+  # Until a nami with this fix is installed (`nami shell` turns it off itself
+  # since 4c3e803): the compiler refuses paths outside the store otherwise.
+  NIX_ENFORCE_PURITY: "0"
+tasks:
+  build: cd "${NAMI_PROJECT:-$TRAY_PROJECT}" && dev/quiet cargo build --release
+  test: cd "${NAMI_PROJECT:-$TRAY_PROJECT}" && dev/quiet cargo test -q
+  # nami's static build (target/release/nami): for the containers' tests.
+  static: cd "${NAMI_PROJECT:-$TRAY_PROJECT}" && PATH="$PWD/tests/lib:$PATH" dev/quiet ./build.sh

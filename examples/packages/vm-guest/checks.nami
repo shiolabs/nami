@@ -1,0 +1,5 @@
+# How to tell vm-guest works, on a computer nami made (tests/usb.sh runs these).
+# (The quick VM test gives the VM both channels, as virt-manager does.)
+"in a VM: SPICE's and QEMU's guest agents, started when the host has them":
+  run: for c in com.redhat.spice.0:spice-vdagentd org.qemu.guest_agent.0:qemu-guest-agent; do if [ -e /dev/virtio-ports/${c%%:*} ]; then printf "%s " "${c#*:}=$(systemctl is-active ${c#*:})"; else printf "%s " "${c#*:}=no-channel-$(systemctl show -p LoadState --value ${c#*:})"; fi; done
+  expect: "^spice-vdagentd=(active|no-channel-loaded) qemu-guest-agent=(active|no-channel-loaded) "

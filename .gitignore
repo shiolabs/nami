@@ -1,0 +1,10 @@
+target/
+out/
+dist/
+.envrc
+.direnv/
+.env
+__pycache__/
+# A Nix build's output link (nix build).
+result
+result-*

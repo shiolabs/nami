@@ -1,0 +1,147 @@
+#!/bin/sh
+# nami-backup: this computer's backups (restic), as /etc/nami-backup.conf says.
+#
+#   nami-backup run [--now]           back up, when one is due (--now: anyway)
+#   nami-backup status                the last backup, and the days to restore from (JSON)
+#   nami-backup restore [DAY] [PATH]  bring files back as they were that day
+#                                     (DAY: latest, 2026-10-20 or a snapshot's id;
+#                                     PATH: everyone's homes and /var/lib, without one)
+#
+# run and restore are root's (the password is); status is anyone's.
+set -eu
+restic=@restic@
+jq=@jq@
+PATH=/run/current-system/sw/bin:$PATH
+conf=${NAMI_BACKUP_CONF:-/etc/nami-backup.conf}
+state=${NAMI_BACKUP_STATE:-/var/lib/nami-backup}
+export RESTIC_PASSWORD_FILE=${NAMI_BACKUP_PASSWORD:-/run/nami/secrets/backup-password}
+export RESTIC_CACHE_DIR=${NAMI_BACKUP_CACHE:-/var/cache/nami-backup}
+# What's backed up, and where a restore goes (nami doctor's check: a folder of its own).
+paths=${NAMI_BACKUP_PATHS:-/home /var/lib /etc/nami}
+target=${NAMI_BACKUP_TARGET:-/}
+# A cloud bucket's keys (AWS_ACCESS_KEY_ID=..., B2_ACCOUNT_ID=...), sealed in system.nami.
+if [ -r /run/nami/secrets/backup-env ]; then set -a; . /run/nami/secrets/backup-env; set +a; fi
+
+# A setting before any [section]; a list is a line each.
+get() { awk -v k="$1" '/^\[/ { exit } { i = index($0, " = "); if (i && substr($0, 1, i - 1) == k) print substr($0, i + 3) }' "$conf" 2>/dev/null || true; }
+# One in [keep].
+kept() { awk -v k="$1" '/^\[/ { on = ($0 == "[keep]"); next } on { i = index($0, " = "); if (i && substr($0, 1, i - 1) == k) print substr($0, i + 3) }' "$conf" 2>/dev/null || true; }
+to=$(get to | head -n 1)
+when=$(get when | head -n 1)
+host=$(hostname)
+
+# What the last try said, for the window and the desktop's notices.
+note() {
+  mkdir -p "$state"
+  [ -s "$state/since" ] || date +%s > "$state/since"
+  date +%s > "$state/tried"
+  [ "$1" = ok ] && date +%s > "$state/done"
+  printf '%s\n' "$2" > "$state/said.new" && mv "$state/said.new" "$state/said"
+  echo "$2"
+}
+
+# Where the backups are (RESTIC_REPOSITORY), or why it can't be reached now.
+# A disk is opened at /run/nami-backup/disk while it's used.
+mnt=
+reach() {
+  case $to in
+    disk:*)
+      label=${to#disk:}
+      dev=$(blkid -L "$label" 2>/dev/null) || { why="the disk $label isn't plugged in"; return 1; }
+      mnt=/run/nami-backup/disk
+      mkdir -p "$mnt"
+      mountpoint -q "$mnt" || mount "$dev" "$mnt" || { why="the disk $label couldn't be opened"; mnt=; return 1; }
+      export RESTIC_REPOSITORY="$mnt/nami-backup/$host"
+      # (A disk an older nami backed up to: its folder, as it is.)
+      [ -e "$RESTIC_REPOSITORY" ] || [ ! -d "$mnt/tray-backup/$host" ] || RESTIC_REPOSITORY="$mnt/tray-backup/$host"
+      ;;
+    *) export RESTIC_REPOSITORY="$to" ;;
+  esac
+}
+let_go() { [ -z "$mnt" ] || umount "$mnt" 2>/dev/null || true; }
+
+# The days there are, from the newest: what status shows.
+look() {
+  $restic snapshots --json --host "$host" > "$state/days.new" 2>/dev/null && mv "$state/days.new" "$state/days" || rm -f "$state/days.new"
+}
+
+case ${1:-} in
+run)
+  [ -n "$to" ] || { echo "no backups set up: /etc/nami-backup.conf says where to (to:)"; exit 0; }
+  mkdir -p "$state"
+  [ -r "$RESTIC_PASSWORD_FILE" ] || { note failed "there's no password for the backups (/run/nami/secrets/backup-password)"; exit 0; }
+  # Due: a day (an hour, a week) since the last one, give or take ten minutes.
+  case $when in hourly) every=3600 ;; weekly) every=604800 ;; *) every=86400 ;; esac
+  last=$(cat "$state/done" 2>/dev/null || echo 0)
+  if [ "${2:-}" != --now ] && [ $(( $(date +%s) - last )) -lt $(( every - 600 )) ] && [ -s "$state/days" ]; then
+    echo "not due yet (the last was $(date -d "@$last" '+%F %R'))"
+    exit 0
+  fi
+  reach || { note waiting "$why"; exit 0; }
+  trap let_go EXIT
+  if ! $restic cat config >/dev/null 2>&1; then
+    echo "starting the backups at $to"
+    $restic init >/dev/null || { note failed "the backups couldn't be started at $to"; exit 1; }
+  fi
+  # This computer's first backup: the newest from before it (the same
+  # computer, made again), to offer bringing back.
+  if [ ! -e "$state/before" ]; then
+    look
+    $jq -c 'last | if . then {id: .short_id, time: .time} else null end' "$state/days" > "$state/before" 2>/dev/null || echo null > "$state/before"
+  fi
+  # What's yours: everyone's homes, services' data, the computer's nami files.
+  # Not what nami builds again (apps, /nix), caches or the trash.
+  ex=$state/leave-out
+  {
+    printf '%s\n' '/home/*/.cache' '/home/*/.local/share/Trash' '/home/*/.local/state/nami' '/home/*/.nix-profile' \
+      /var/lib/docker /var/lib/containers /var/lib/systemd/coredump /var/lib/nami-backup
+    get leave-out | sed 's|^~/|/home/*/|'
+  } > "$ex"
+  set --
+  for p in $paths; do [ -e "$p" ] && set -- "$@" "$p"; done
+  rc=0
+  $restic backup --one-file-system --exclude-caches --exclude-file "$ex" --host "$host" --tag nami "$@" || rc=$?
+  # 3: a few files couldn't be read; the rest is backed up.
+  case $rc in
+    0) ;;
+    3) echo "(some files couldn't be read)" ;;
+    *) look; note failed "the backup didn't finish (restic: $rc)"; exit 1 ;;
+  esac
+  $restic forget --host "$host" --prune --keep-daily "$(kept daily | grep . || echo 7)" --keep-weekly "$(kept weekly | grep . || echo 4)" \
+    --keep-monthly "$(kept monthly | grep . || echo 12)" >/dev/null || echo "(the old days weren't cleared out this time)"
+  look
+  note ok "backed up"
+  ;;
+status)
+  # {"to": ..., "when": ..., "done": seconds, "tried": seconds, "since": the first try, seconds, "said": ...,
+  #  "before": the newest backup from before this computer ({"id", "time"}) or null,
+  #  "days": [{"id", "time", "files", "bytes"}], newest first}
+  r() { cat "$state/$1" 2>/dev/null || echo "${2-null}"; }
+  $jq -n --arg to "$to" --arg when "${when:-daily}" --argjson done "$(r done)" --argjson tried "$(r tried)" \
+    --argjson since "$(r since)" --argjson before "$(r before)" --arg said "$(r said '')" --slurpfile days "$(if [ -s "$state/days" ]; then echo "$state/days"; else echo /dev/null; fi)" \
+    '{to: (if $to == "" then null else $to end), when: $when, done: $done, tried: $tried, since: $since, before: $before, said: $said,
+      days: (($days[0] // []) | map({id: .short_id, time: .time, files: (.summary.total_files_processed // null), bytes: (.summary.total_bytes_processed // null)}) | reverse)}'
+  ;;
+restore)
+  [ -n "$to" ] || { echo "no backups set up: /etc/nami-backup.conf says where they are (to:)" >&2; exit 1; }
+  day=${2:-latest}
+  [ $# -gt 2 ] && shift 2 || set --
+  reach || { echo "$why" >&2; exit 1; }
+  trap let_go EXIT
+  # A date: that day's newest.
+  case $day in
+    ????-??-??)
+      id=$($restic snapshots --json --host "$host" | $jq -r --arg d "$day" '[.[] | select(.time | startswith($d))] | last | .short_id // empty')
+      [ -n "$id" ] || { echo "there's no backup from $day" >&2; exit 1; }
+      day=$id ;;
+  esac
+  [ $# -gt 0 ] || set -- /home /var/lib
+  echo "bringing back $* as of $day"
+  for p in "$@"; do set -- "$@" --include "$p"; shift; done
+  exec $restic restore "$day" --host "$host" --target "$target" "$@"
+  ;;
+*)
+  sed -n '2,11s/^# \{0,1\}//p' "$0"
+  exit 2
+  ;;
+esac

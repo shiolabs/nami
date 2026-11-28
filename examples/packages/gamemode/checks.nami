@@ -1,0 +1,7 @@
+# How to tell gamemode works, on a computer nami made (tests/usb.sh runs these).
+"GameMode: on while a game runs (gamemoded, started by D-Bus)":
+  run: gamemoded -r >/dev/null 2>&1 & sleep 3; gamemoded -s; kill $!
+  expect: "gamemode is active"
+"GameMode: it may change the governor without a password":
+  run: pkcheck --action-id com.feralinteractive.GameMode.governor-helper --process $$ && echo allowed
+  expect: "^allowed"

@@ -1,0 +1,77 @@
+# nami-bundle-action: your program as one file that runs on any Linux,
+# attached to your GitHub release. One step:
+#
+#   - uses: shiolabs/nami/action@main
+#
+# It installs nami, runs `nami bundle` on your project (Rust, Go, CMake,
+# Meson, Python, Node.js, Electron, Zig, Flutter, .NET,
+# programs already built, or a recipe), and uploads the bundle with
+# its .sha256 to the release the workflow runs for. See example-release.yml
+# and https://namios.dev/docs/nami/ship-your-app
+name: nami bundle
+description: Make your Linux program one file that runs on Ubuntu, Fedora, Debian, Arch and the rest, and attach it to your release.
+author: nami
+branding:
+  icon: package
+  color: blue
+
+inputs:
+  path:
+    description: The project's folder, in the repo.
+    default: .
+  what:
+    description: What to bundle, if not the project folder itself (a recipe folder, a catalog package, a program you built).
+    default: ''
+  args:
+    description: More `nami bundle` options, as you'd type them (--program app, --exclude python3, --name, --app-version, ...).
+    default: ''
+  appimage:
+    description: Also make an AppImage of it (<name>-x86_64.AppImage).
+    default: 'false'
+  thin:
+    description: Also make a thin variant (<name>-thin-x86_64), which downloads what cache.nixos.org has on first start.
+    default: 'false'
+  upload:
+    description: "Upload to the release: auto (when the workflow runs for a release or a tag), true, or false."
+    default: auto
+  tag:
+    description: The release's tag (default, the tag the workflow runs for).
+    default: ''
+  token:
+    description: A token that can write releases.
+    default: ${{ github.token }}
+  install-url:
+    description: Where nami's installer is.
+    default: https://namios.dev/install
+  nami-binary:
+    description: For testing nami itself, a nami binary to use instead of the release's.
+    default: ''
+
+outputs:
+  bundle:
+    description: The bundle's path.
+    value: ${{ steps.bundle.outputs.bundle }}
+  files:
+    description: Every file made (bundles and their .sha256), one per line.
+    value: ${{ steps.bundle.outputs.files }}
+  dir:
+    description: The folder they are in.
+    value: ${{ steps.bundle.outputs.dir }}
+
+runs:
+  using: composite
+  steps:
+    - id: bundle
+      shell: bash
+      run: '"$GITHUB_ACTION_PATH/bundle.sh"'
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_WHAT: ${{ inputs.what }}
+        INPUT_ARGS: ${{ inputs.args }}
+        INPUT_APPIMAGE: ${{ inputs.appimage }}
+        INPUT_THIN: ${{ inputs.thin }}
+        INPUT_UPLOAD: ${{ inputs.upload }}
+        INPUT_TAG: ${{ inputs.tag }}
+        INPUT_INSTALL_URL: ${{ inputs.install-url }}
+        INPUT_NAMI_BINARY: ${{ inputs.nami-binary }}
+        GH_TOKEN: ${{ inputs.token }}

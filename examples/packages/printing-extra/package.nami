@@ -1,0 +1,11 @@
+# More printer drivers, for older printers that don't print by themselves
+# over the network (most since 2015 do, with no driver: printing):
+# OpenPrinting's collection of PPDs (foomatic, Ubuntu's openprinting-ppds),
+# foo2zjs's (HP LaserJet 1000s, Minolta, Samsung's host-based lasers) and
+# Brother's label printers. About 0.1 GB; `- printing-extra` (next to namios)
+# in system.nami adds them.
+packages:
+  - printing
+  - foomatic-db-ppds
+  - foo2zjs
+  - ptouch-driver

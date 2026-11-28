@@ -1,0 +1,57 @@
+# In a virtual machine, as Ubuntu installs it: SPICE's agent (copy and
+# paste between the VM and the computer it runs on, the screen's size
+# following the window, in virt-manager, GNOME Boxes, Proxmox...) and
+# QEMU's guest agent (the host can shut it down cleanly, freeze its disks
+# for a snapshot). Each starts only in a VM whose host gives it the
+# channel for it (udev starts it then); elsewhere nothing runs.
+# desktop lists this.
+packages:
+  - spice-vdagent
+  - qemu.ga
+files:
+  /etc/udev/rules.d/70-nami-vm-guest.rules: |
+    SUBSYSTEM=="virtio-ports", ATTR{name}=="com.redhat.spice.0", TAG+="systemd", ENV{SYSTEMD_WANTS}+="spice-vdagentd.service"
+    SUBSYSTEM=="virtio-ports", ATTR{name}=="org.qemu.guest_agent.0", TAG+="systemd", ENV{SYSTEMD_WANTS}+="qemu-guest-agent.service"
+  /etc/systemd/system/spice-vdagentd.service: |
+    [Unit]
+    Description=SPICE guest agent (copy and paste, screen size)
+    ConditionVirtualization=vm
+    ConditionPathExists=/dev/virtio-ports/com.redhat.spice.0
+    BindsTo=dev-virtio\x2dports-com.redhat.spice.0.device
+    After=dev-virtio\x2dports-com.redhat.spice.0.device
+    [Service]
+    RuntimeDirectory=spice-vdagentd
+    # (The mouse, as the host's window moves it.)
+    ExecStartPre=-/run/current-system/sw/bin/modprobe uinput
+    ExecStart=/run/current-system/sw/bin/spice-vdagentd -x
+    Restart=on-failure
+  /etc/systemd/system/qemu-guest-agent.service: |
+    [Unit]
+    Description=QEMU guest agent
+    ConditionVirtualization=vm
+    ConditionPathExists=/dev/virtio-ports/org.qemu.guest_agent.0
+    BindsTo=dev-virtio\x2dports-org.qemu.guest_agent.0.device
+    After=dev-virtio\x2dports-org.qemu.guest_agent.0.device
+    [Service]
+    ExecStart=/run/current-system/sw/bin/qemu-ga
+    Restart=always
+    RestartSec=0
+  # Each person's half, in their desktop session, talking to the above.
+  /etc/systemd/user/spice-vdagent.service: |
+    [Unit]
+    Description=SPICE guest agent, for this desktop
+    PartOf=graphical-session.target
+    After=graphical-session.target
+    ConditionVirtualization=vm
+    ConditionPathExists=/dev/virtio-ports/com.redhat.spice.0
+    ConditionUser=!@system
+    StartLimitIntervalSec=120
+    StartLimitBurst=3
+    [Service]
+    ExecStart=/run/current-system/sw/bin/spice-vdagent -x
+    Restart=on-failure
+    RestartSec=10
+    [Install]
+    WantedBy=graphical-session.target
+services:
+  - spice-vdagent.service: { per-person: true }

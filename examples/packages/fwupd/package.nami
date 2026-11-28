@@ -1,0 +1,4 @@
+# Firmware updates (Settings, GNOME Firmware): the list of updates is
+# fetched now and then.
+services:
+  - fwupd-refresh.timer

@@ -1,0 +1,4 @@
+# How to tell it's the XanMod kernel, on a computer nami made (tests/usb.sh runs these).
+"the XanMod kernel is running":
+  run: uname -r
+  expect: "xanmod"

@@ -1,0 +1,196 @@
+name: macOS
+
+# nami on Macs (a preview: packages, user.nami, projects), on GitHub's runners: Apple silicon
+# (macos-15) and Intel (macos-15-intel). Each builds nami, runs the unit tests, and installs it
+# for real with tests/mac/e2e.sh: the curl installer against a site served on the runner (a
+# test catalog, tests/mac, signed with a test key), the /nix volume, the daemon, `nami
+# install`, apps with a window in Applications (~/Applications/nami Apps, and everyone's in
+# /Applications/nami Apps), a project, undo, and the uninstaller. And nami's app, nami.app (gui/): built, its
+# unit tests, signed ad hoc, opened once (a window, a frame, then it ends); each Mac's tarball
+# has it, and e2e.sh checks the installer puts it in /Applications and the uninstaller takes it
+# away.
+#
+# A release asks for it by hand (Actions, macOS, Run workflow, with the release's version), and
+# takes both Macs' tarballs from the artifact `nami-macos`:
+#   gh run download <run> -n nami-macos -D dist
+# Only by hand: on GitHub's runners, read-only and without secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to build as (a release's); default Cargo.toml's"
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  WANT_VERSION: ${{ inputs.version }}
+
+jobs:
+  unit:
+    name: unit tests (${{ matrix.system }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: macos-15, system: aarch64-darwin }
+          - { runner: macos-15-intel, system: x86_64-darwin }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # (The release profile's LTO is for what's shipped; the tests needn't wait for it.)
+      - name: Unit tests
+        run: cargo test --release --bin nami --no-fail-fast
+        env:
+          CARGO_PROFILE_RELEASE_LTO: "false"
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
+
+  # nami's app on a Mac: nami-gui as this repo builds it, in nami.app (gui/mac/make-app.sh),
+  # signed ad hoc. Its unit tests; the bundle checked (its plist, signature, icon); `--version`;
+  # and `--smoke-test` twice, run as it is and opened as Finder opens it (LaunchServices,
+  # launchd's PATH): its window opens, nami's first look is taken, a frame's drawn with its
+  # letters (a real text system, with Geist in it: 0.21.0's had none and drew no text), it
+  # ends. Then a screenshot of it, the artifact nami.app-screen-<system>, to look at.
+  # (Without nami here: e2e.sh opens it again with nami.)
+  app:
+    name: nami.app (${{ matrix.system }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: macos-15, system: aarch64-darwin }
+          - { runner: macos-15-intel, system: x86_64-darwin }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: The version
+        run: |
+          if [ -n "$WANT_VERSION" ]; then
+            echo "$WANT_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "\"$WANT_VERSION\" isn't a version"; exit 1; }
+            sed -i '' "1,/^version = /s/^version = .*/version = \"$WANT_VERSION\"/" Cargo.toml
+          fi
+          echo "VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)" >> "$GITHUB_ENV"
+      - name: Build nami-gui
+        run: |
+          NAMI_VERSION=$VERSION cargo build --release --manifest-path gui/Cargo.toml --no-default-features --bin nami-gui
+          file gui/target/release/nami-gui
+          otool -L gui/target/release/nami-gui
+      - name: Unit tests
+        run: NAMI_VERSION=$VERSION cargo test --release --manifest-path gui/Cargo.toml --no-default-features --bin nami-gui
+      - name: nami.app
+        run: |
+          sh gui/mac/make-app.sh gui/target/release/nami-gui "$VERSION" out
+          find out/nami.app | sort
+          plutil -p out/nami.app/Contents/Info.plist
+          codesign -dvv out/nami.app 2>&1
+          iconutil -c iconset -o "$RUNNER_TEMP/nami.iconset" out/nami.app/Contents/Resources/nami.icns
+          ls "$RUNNER_TEMP/nami.iconset"
+          out/nami.app/Contents/MacOS/nami-gui --version
+          [ "$(out/nami.app/Contents/MacOS/nami-gui --version)" = "nami-gui $VERSION" ]
+          spctl --assess --type execute -vv out/nami.app 2>&1 || echo "(Gatekeeper doesn't pass it: ad hoc, not notarized)"
+      - name: It opens
+        run: |
+          # (perl's alarm: macOS has no timeout.)
+          perl -e 'alarm 120; exec @ARGV' out/nami.app/Contents/MacOS/nami-gui --smoke-test
+          perl -e 'alarm 120; exec @ARGV' open -W -n --stdout "$RUNNER_TEMP/open.log" --stderr "$RUNNER_TEMP/open.log" out/nami.app --args --smoke-test
+          cat "$RUNNER_TEMP/open.log"
+          grep -q "the window opened and drew" "$RUNNER_TEMP/open.log"
+      - name: A screenshot
+        run: |
+          out/nami.app/Contents/MacOS/nami-gui & pid=$!
+          sleep 10
+          screencapture -x "$RUNNER_TEMP/nami-app.png"
+          kill "$pid"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nami.app-screen-${{ matrix.system }}
+          path: ${{ runner.temp }}/nami-app.png
+      # (A tarball: an artifact's zip would lose the program's x bit.)
+      - name: Pack
+        run: COPYFILE_DISABLE=1 tar -C out -czf out/nami-app.tar.gz nami.app
+      # (Not named nami-*-darwin: `together` takes those, the release's tarballs.)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nami.app-${{ matrix.system }}
+          path: out/nami-app.tar.gz
+
+  e2e:
+    name: install for real (${{ matrix.system }})
+    needs: [app]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: macos-15, system: aarch64-darwin }
+          - { runner: macos-15-intel, system: x86_64-darwin }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # This Mac's nami.app, for its tarball.
+      - uses: actions/download-artifact@v4
+        with:
+          name: nami.app-${{ matrix.system }}
+          path: out-app
+      - run: tar -C out-app -xzf out-app/nami-app.tar.gz && codesign --verify --strict out-app/nami.app
+      - name: The version
+        run: |
+          if [ -n "$WANT_VERSION" ]; then
+            echo "$WANT_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "\"$WANT_VERSION\" isn't a version"; exit 1; }
+            sed -i '' "1,/^version = /s/^version = .*/version = \"$WANT_VERSION\"/" Cargo.toml
+          fi
+          echo "VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)" >> "$GITHUB_ENV"
+      - name: Build
+        run: |
+          cargo build --release --bin nami
+          file target/release/nami
+          otool -L target/release/nami
+          target/release/nami --version
+      # What a release has for this Mac.
+      - name: The tarball
+        run: |
+          d=out/stage/nami-$VERSION
+          mkdir -p "$d"
+          cp target/release/nami install.sh uninstall.sh install-mac.sh uninstall-mac.sh packaging/setup.sh "$d/"
+          ditto out-app/nami.app "$d/nami.app"
+          COPYFILE_DISABLE=1 tar -C out/stage -czf "out/nami-$VERSION-${{ matrix.system }}.tar.gz" "nami-$VERSION"
+          rm -rf out/stage
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nami-${{ matrix.system }}
+          path: out/*
+      - name: Install, use and uninstall nami
+        run: NAMI_SHOTS=$RUNNER_TEMP/shots sh tests/mac/e2e.sh target/release/nami out-app/nami.app
+      - name: What the daemon said
+        if: always()
+        run: sudo cat /var/log/nami-daemon.log 2>/dev/null || true
+      # (What nami's window showed, with apps from Homebrew's casks installed, and its Uninstall nami?, light and dark: e2e.sh's.)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-${{ matrix.system }}
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
+  # Both Macs' tarballs in one artifact, `nami-macos`, for a release.
+  together:
+    needs: [e2e]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: nami-*-darwin
+          merge-multiple: true
+          path: out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nami-macos
+          path: out/*

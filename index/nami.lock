@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "system": "x86_64-linux",
+  "catalog": {
+    "channel": "nixos-unstable",
+    "release": "55bfb4d7437b",
+    "sha256": "7187ce2461d478f60338b4b0ef1f935a7f8f1dac1577ae7ee5e1db742452d33e"
+  },
+  "packages": {
+    "brotli": {
+      "name": "brotli-1.2.0",
+      "paths": [
+        "/nix/store/img7s7q1qp0c122cgygl2q9gdgjzvk1d-brotli-1.2.0"
+      ]
+    },
+    "curl": {
+      "name": "curl-8.22.0",
+      "paths": [
+        "/nix/store/5g20bqhw379iw2vp2jxwzzsf5n1gmh4h-curl-8.22.0-bin"
+      ]
+    },
+    "gnutar": {
+      "name": "gnutar-1.35",
+      "paths": [
+        "/nix/store/f4id9s3nydjrzxvgqfvhphsbql6ll26k-gnutar-1.35"
+      ]
+    },
+    "imagemagick": {
+      "name": "imagemagick-7.1.2-31",
+      "paths": [
+        "/nix/store/s13s3r3pi67vj27s6ca7pbrxs2z4zjf6-imagemagick-7.1.2-31"
+      ]
+    },
+    "jq": {
+      "name": "jq-1.8.2",
+      "paths": [
+        "/nix/store/m3y7hqmy20nd1ps6qy8410a326255bf0-jq-1.8.2-bin"
+      ]
+    },
+    "nix-eval-jobs": {
+      "name": "nix-eval-jobs-2.35.4",
+      "paths": [
+        "/nix/store/x7vlvrvkds62hm5kp12gs66sggw4kws0-nix-eval-jobs-2.35.4"
+      ]
+    },
+    "nixVersions.latest": {
+      "name": "nix-2.35.3",
+      "paths": [
+        "/nix/store/rl2nyaxjcyvy70pqxsajzxd518zjy5p5-nix-2.35.3"
+      ]
+    },
+    "python3": {
+      "name": "python3-3.14.7",
+      "paths": [
+        "/nix/store/lb41b0anx1f98y9y5s9mdv97gjgsq740-python3-3.14.7"
+      ]
+    },
+    "python314Packages.pillow": {
+      "name": "python3.14-pillow-12.3.0",
+      "paths": [
+        "/nix/store/jdln7vmhsis96vrwiph1cydi0xyf324h-python3.14-pillow-12.3.0"
+      ]
+    },
+    "python314Packages.pyyaml": {
+      "name": "python3.14-pyyaml-6.0.3",
+      "paths": [
+        "/nix/store/nd6kjsvl0n0br8dxaifb6biyls76p5ch-python3.14-pyyaml-6.0.3"
+      ]
+    },
+    "rclone": {
+      "name": "rclone-1.75.2",
+      "paths": [
+        "/nix/store/p4x1zk537d2lndx91ca289nm0q4fpd14-rclone-1.75.2"
+      ]
+    },
+    "xz": {
+      "name": "xz-5.8.4",
+      "paths": [
+        "/nix/store/f10qh0sgpx38n3azj08dgbbnlxspv26n-xz-5.8.4-bin"
+      ]
+    },
+    "zstd": {
+      "name": "zstd-1.5.7",
+      "paths": [
+        "/nix/store/yfqdq38iw1k9n0a0w1ncsxpl2fs5gy94-zstd-1.5.7-bin"
+      ]
+    }
+  }
+}

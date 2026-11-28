@@ -1,0 +1,194 @@
+# Apps built for other distributions, on a desktop: a downloaded app's tarball
+# (VS Code's, Discord's, Zed's, JetBrains'), an AppImage, a game. Next to
+# other-linuxes' set (base has it), the libraries desktop apps and games
+# link to: X11's and Wayland's, OpenGL's and Vulkan's, sound's, GTK's,
+# Chromium's and Electron's (NSS, CUPS, the keyring), SDL's and pictures'.
+# And opening one in Files starts it (`nami start`: it's made a program
+# first, asked, as downloads aren't; an AppImage is unpacked if FUSE can't
+# mount it), with what it lacks said as a notification, with Add; after
+# its first start, it's offered for the launcher (`nami add-to-launcher`,
+# with its own name and picture).
+# A downloaded package opened in Files (or from the browser's downloads) —
+# a .deb, an .rpm, an AppImage, a tarball with a program in it — shows in
+# Settings to install, just for that person, no admin password (`nami
+# open-package`, then `nami install <file>`; src/foreign.rs). A tarball
+# that's only files is unpacked beside it, as Files does. So does a nami
+# bundle, an app in one file (application/x-tray-bundle, namios-files';
+# src/bundle_app.rs).
+# desktop lists it; leave it out with `without: [other-linuxes-desktop]`.
+packages:
+  - other-linuxes
+  # AppImages of the older kind mount themselves with FUSE 2 (libfuse.so.2,
+  # fusermount); fuse3's fusermount3 is base's. nixpkgs dropped FUSE 2 in
+  # 26.11 (its `fuse` is FUSE 3 now): its last build, from the catalog's
+  # history, ready-built.
+  - fuse: 2
+  # unsquashfs: what's in an AppImage (its name, icon), read without starting it.
+  - squashfs-tools
+setuid: [bin/fusermount]
+libraries:
+  # X11 and Wayland.
+  - libx11
+  - libxext
+  - libxrender
+  - libxrandr
+  - libxi
+  - libxcursor
+  - libxfixes
+  - libxcomposite
+  - libxdamage
+  - libxtst
+  - libxscrnsaver
+  - libxinerama
+  - libxxf86vm
+  - libsm
+  - libice
+  - libxau
+  - libxdmcp
+  - libxcb
+  - libxcb-util
+  - libxcb-image
+  - libxcb-keysyms
+  - libxcb-render-util
+  - libxcb-wm
+  - libxcb-cursor
+  - libxmu
+  - libxt
+  - libxpm
+  - libxv
+  - libxft
+  - libxshmfence
+  - libxkbfile
+  - libxkbcommon
+  - wayland
+  - libdecor
+  # Graphics: OpenGL, EGL and Vulkan's loaders (the drivers are in
+  # /run/opengl-driver), GBM, video decoding.
+  - libglvnd
+  - libGLU
+  - freeglut
+  - glew
+  - libgbm
+  - libdrm
+  - libepoxy
+  - vulkan-loader
+  - libva
+  - libvdpau
+  # Sound.
+  - alsa-lib
+  - libpulseaudio
+  - pipewire
+  - libjack2
+  - openal
+  - portaudio
+  - libsndfile
+  - libvorbis
+  - libogg
+  - flac
+  - libopus
+  - libmpg123
+  - speex
+  - libsamplerate
+  - libtheora
+  - gst_all_1.gstreamer
+  - gst_all_1.gst-plugins-base
+  # GTK and what draws text and pictures.
+  - gtk3
+  # (nixpkgs 26.11 dropped GTK 2 and libpng 1.2: their last builds, from the
+  # catalog's history, as with FUSE 2.)
+  - gtk2@2
+  - gtk4
+  - pango
+  - cairo
+  - gdk-pixbuf
+  - at-spi2-core
+  - fontconfig
+  - freetype
+  - harfbuzz
+  - fribidi
+  - graphite2
+  - libthai
+  - pixman
+  - json-glib
+  - libsoup_3
+  - libportal
+  # Chromium's and Electron's: NSS, printing, the keyring, notifications,
+  # the panel's icons.
+  - nss
+  - nspr
+  - cups
+  - libsecret
+  - libnotify
+  - libappindicator
+  - libayatana-appindicator
+  - libdbusmenu
+  - libdbusmenu-gtk3
+  - libcanberra
+  # Pictures.
+  - libpng
+  - libpng12@1.2
+  - libjpeg
+  - libjpeg8
+  - libtiff
+  - libwebp
+  - lcms2
+  # Games: SDL, controllers, input.
+  - SDL2
+  - sdl3
+  - SDL2_image
+  - SDL2_mixer
+  - SDL2_ttf
+  - hidapi
+  - libgudev
+  - libevdev
+  - libpciaccess
+  # AppImages' FUSE 2 (above).
+  - fuse@2
+files:
+  # Opening a program in Files (an AppImage, a downloaded app's program):
+  # `nami start`. And "Add to Launcher", in Files' Open With.
+  /etc/nami-os/share/applications/nami-start.desktop: |
+    [Desktop Entry]
+    Type=Application
+    Name=Run Program
+    Comment=Start a program built for another distribution
+    Icon=application-x-executable
+    Exec=/nix/var/nami/bin/nami start %f
+    MimeType=application/vnd.appimage;application/x-iso9660-appimage;application/x-executable;application/x-pie-executable;application/x-sharedlib;application/x-tray-bundle;
+    NoDisplay=true
+    Terminal=false
+  /etc/nami-os/share/applications/nami-add-to-launcher.desktop: |
+    [Desktop Entry]
+    Type=Application
+    Name=Add to Launcher
+    Comment=Put a program built for another distribution in the launcher
+    Icon=list-add
+    Exec=/nix/var/nami/bin/nami add-to-launcher %f
+    MimeType=application/vnd.appimage;application/x-iso9660-appimage;application/x-executable;application/x-pie-executable;
+    NoDisplay=true
+    Terminal=false
+  # A downloaded package to install: Settings shows it, with Install.
+  /etc/nami-os/share/applications/nami-install-app.desktop: |
+    [Desktop Entry]
+    Type=Application
+    Name=Install App
+    Comment=Install an app built for another distribution, just for you
+    Icon=system-software-install
+    Exec=/nix/var/nami/bin/nami open-package %f
+    MimeType=application/vnd.debian.binary-package;application/x-deb;application/x-rpm;application/x-redhat-package-manager;application/vnd.appimage;application/x-iso9660-appimage;application/x-compressed-tar;application/x-xz-compressed-tar;application/x-zstd-compressed-tar;application/x-tray-bundle;
+    NoDisplay=true
+    Terminal=false
+  # Opening a package shows it to install; an AppImage too (Run Program is in Open
+  # With, to start it without installing it); a program, Run Program.
+  /etc/nami-os/share/applications/mimeapps.list: |
+    [Default Applications]
+    application/vnd.debian.binary-package=nami-install-app.desktop
+    application/x-deb=nami-install-app.desktop
+    application/x-rpm=nami-install-app.desktop
+    application/x-redhat-package-manager=nami-install-app.desktop
+    application/vnd.appimage=nami-install-app.desktop
+    application/x-iso9660-appimage=nami-install-app.desktop
+    application/x-tray-bundle=nami-install-app.desktop
+    application/x-executable=nami-start.desktop
+    application/x-pie-executable=nami-start.desktop
+    application/x-sharedlib=nami-start.desktop

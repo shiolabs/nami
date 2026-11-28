@@ -1,0 +1,296 @@
+# Apps on another computer next to nami's names, for `nami import` run on
+# that computer (Ubuntu, Debian, Windows). Each is a catalog name (several
+# with spaces), `~` for nothing to bring (the system's own part, or nami's
+# computer has it already), or "- why" for an app nami can't bring.
+#
+# A name not here is still looked for: the same name in the catalog, then
+# the package whose menu entry (.desktop file) or program has the name the
+# old one had. So this table only holds the names that differ.
+
+# Debian and Ubuntu packages (apt).
+deb:
+  build-essential: gcc gnumake
+  g++: gcc
+  make: gnumake
+  ninja-build: ninja
+  pkgconf: pkg-config
+  python3-pip: python3Packages.pip
+  python3-venv: ~
+  python-is-python3: ~
+  pipx: pipx
+  npm: nodejs
+  golang: go
+  golang-go: go
+  default-jdk: jdk
+  default-jre: jdk
+  rustc: rustc
+  cargo: cargo
+  # Docker (Ubuntu's or Docker's own apt repository): the docker package (see
+  # features: below), with what it needs.
+  docker.io: docker
+  docker-ce: docker
+  docker-ce-cli: docker
+  docker-ce-rootless-extras: ~
+  containerd.io: ~
+  containerd: ~
+  runc: ~
+  docker-buildx-plugin: docker-buildx
+  docker-buildx: docker-buildx
+  docker-compose-plugin: docker-compose
+  docker-compose-v2: docker-compose
+  podman-docker: podman
+  code: vscode
+  code-insiders: vscode
+  google-chrome-stable: google-chrome
+  microsoft-edge-stable: microsoft-edge
+  brave-browser: brave
+  vivaldi-stable: vivaldi
+  spotify-client: spotify
+  slack-desktop: slack
+  zoom: zoom-us
+  steam: steam
+  steam-installer: steam
+  steam-launcher: steam
+  sublime-text: sublime4
+  1password: _1password-gui
+  fd-find: fd
+  vim-gtk3: vim-full
+  vim-nox: vim
+  neovim: neovim
+  qemu-system-x86: qemu
+  qemu-system-gui: ~
+  qemu-system: qemu
+  qemu-kvm: qemu
+  qemu-utils: qemu-utils
+  libvirt-daemon-system: libvirt
+  libvirt-clients: libvirt
+  fonts-liberation: liberation_ttf
+  fonts-liberation2: liberation_ttf
+  fonts-noto-color-emoji: noto-fonts-color-emoji
+  fonts-firacode: fira-code
+  fonts-jetbrains-mono: jetbrains-mono
+  fonts-hack: hack-font
+  fonts-roboto: roboto
+  fonts-dejavu: dejavu_fonts
+  ttf-mscorefonts-installer: corefonts
+  transmission-gtk: transmission_4-gtk
+  network-manager-openvpn-gnome: networkmanager-openvpn
+  gnome-shell-extension-manager: gnome-extension-manager
+  # The system's own: a nami computer comes with these, or does it its way.
+  snapd: ~
+  flatpak: flatpak
+  gnome-software-plugin-snap: ~
+  gnome-software-plugin-flatpak: ~
+  software-properties-common: ~
+  apt-transport-https: ~
+  ca-certificates: ~
+  gnupg: ~
+  lsb-release: ~
+  ubuntu-restricted-extras: "- Ubuntu's codecs and fonts: nami's apps bring their own codecs"
+  wslu: ~
+  openssh-server: "- the SSH server is the computer's: not set up by import yet"
+
+# Snaps (`snap list`). The snaps Ubuntu itself uses (core*, gnome-*,
+# gtk-common-themes, snapd, ...) are left out by name in the code.
+snap:
+  code: vscode
+  code-insiders: vscode
+  zoom-client: zoom-us
+  node: nodejs
+  dbeaver-ce: dbeaver-bin
+  bitwarden: bitwarden-desktop
+  1password: _1password-gui
+  sublime-text: sublime4
+  nvim: neovim
+  kdenlive: kdePackages.kdenlive
+  intellij-idea-community: "- JetBrains' IDEs aren't in the catalog: use their Toolbox app's download"
+  intellij-idea-ultimate: "- JetBrains' IDEs aren't in the catalog: use their Toolbox app's download"
+  pycharm-community: "- JetBrains' IDEs aren't in the catalog: use their Toolbox app's download"
+  pycharm-professional: "- JetBrains' IDEs aren't in the catalog: use their Toolbox app's download"
+  whatsapp-for-linux: zapzap
+  multipass: "- Canonical's VM tool: gnome-boxes or virt-manager do the same"
+  snap-store: ~
+  snapd-desktop-integration: ~
+  firmware-updater: ~
+  desktop-security-center: ~
+  prompting-client: ~
+
+# Flatpaks (their app IDs). One whose ID is a menu entry in the catalog
+# (org.gnome.Boxes -> org.gnome.Boxes.desktop -> gnome-boxes) needs no line.
+flatpak:
+  org.mozilla.firefox: firefox
+  org.mozilla.Thunderbird: thunderbird
+  com.google.Chrome: google-chrome
+  org.chromium.Chromium: chromium
+  com.brave.Browser: brave
+  com.spotify.Client: spotify
+  com.discordapp.Discord: discord
+  com.slack.Slack: slack
+  us.zoom.Zoom: zoom-us
+  org.signal.Signal: signal-desktop
+  com.valvesoftware.Steam: steam
+  org.videolan.VLC: vlc
+  org.gimp.GIMP: gimp
+  org.libreoffice.LibreOffice: libreoffice
+  org.blender.Blender: blender
+  org.kde.krita: krita
+  org.kde.kdenlive: kdePackages.kdenlive
+  com.visualstudio.code: vscode
+  com.bitwarden.desktop: bitwarden-desktop
+  net.lutris.Lutris: lutris
+  com.mattjakeman.ExtensionManager: gnome-extension-manager
+  io.missioncenter.MissionCenter: mission-center
+  com.github.tchx84.Flatseal: ~
+
+# Windows programs: words in a program's name (lower case, the longest
+# that fits wins) -> the Linux app. `~` is Windows' own, or a driver.
+windows:
+  google chrome: google-chrome
+  mozilla firefox: firefox
+  firefox: firefox
+  microsoft edge: microsoft-edge
+  brave: brave
+  vivaldi: vivaldi
+  opera: "- Opera: firefox or google-chrome instead"
+  visual studio code: vscode
+  microsoft vs code: vscode
+  vs code: vscode
+  cursor: code-cursor
+  zed: zed-editor
+  visual studio: "- Visual Studio is Windows-only: vscode, or JetBrains' Rider"
+  sublime text: sublime4
+  notepad++: notepad-next
+  spotify: spotify
+  steam: steam
+  epic games: heroic
+  gog galaxy: heroic
+  ea app: "- EA's app is Windows-only: heroic or lutris run many of its games"
+  ubisoft connect: lutris
+  battle.net: lutris
+  minecraft: prismlauncher
+  discord: discord
+  slack: slack
+  zoom: zoom-us
+  microsoft teams: teams-for-linux
+  teams: teams-for-linux
+  skype: "- Skype is gone: teams-for-linux, or the web"
+  whatsapp: zapzap
+  telegram: telegram-desktop
+  signal: signal-desktop
+  element: element-desktop
+  thunderbird: thunderbird
+  vlc: vlc
+  gimp: gimp
+  inkscape: inkscape
+  krita: krita
+  blender: blender
+  audacity: audacity
+  obs studio: obs-studio
+  handbrake: handbrake
+  shotcut: shotcut
+  darktable: darktable
+  libreoffice: libreoffice
+  microsoft office: "- Microsoft Office is Windows-only: libreoffice opens its files (or office.com in a browser)"
+  microsoft 365: "- Microsoft Office is Windows-only: libreoffice opens its files (or office.com in a browser)"
+  onenote: "- OneNote: onenote.com in a browser"
+  onedrive: "- OneDrive: onedrive (the command), or the web; your files come with your folders"
+  dropbox: dropbox
+  nextcloud: nextcloud-client
+  google drive: "- Google Drive's app is Windows-only: drive.google.com in a browser"
+  obsidian: obsidian
+  notion: "- Notion: notion.so in a browser"
+  postman: postman
+  docker desktop: docker
+  git: git
+  github desktop: github-desktop
+  python: python3
+  node.js: nodejs
+  nodejs: nodejs
+  go programming language: go
+  rustup: rustup
+  powershell 7: powershell
+  java: jdk
+  openjdk: jdk
+  eclipse temurin: jdk
+  android studio: android-studio
+  dbeaver: dbeaver-bin
+  putty: putty
+  winscp: filezilla
+  filezilla: filezilla
+  wireshark: wireshark
+  keepass: keepassxc
+  keepassxc: keepassxc
+  bitwarden: bitwarden-desktop
+  1password: _1password-gui
+  tailscale: tailscale
+  anydesk: anydesk
+  rustdesk: rustdesk
+  teamviewer: teamviewer
+  mullvad: mullvad-vpn
+  7-zip: p7zip
+  winrar: p7zip
+  calibre: calibre
+  freecad: freecad
+  kicad: kicad
+  openscad: openscad
+  prusaslicer: prusa-slicer
+  orcaslicer: orca-slicer
+  ultimaker cura: "- Cura: prusa-slicer or orca-slicer"
+  logi options: solaar
+  logioptionsplus: solaar
+  logi: solaar
+  logitech g hub: piper
+  rhino: "- Rhino is Windows and Mac only: freecad, or Rhino in a Windows VM (gnome-boxes)"
+  autocad: "- AutoCAD is Windows-only: freecad"
+  adobe acrobat: ~
+  adobe photoshop: "- Photoshop is Windows-only: gimp or krita"
+  adobe illustrator: "- Illustrator is Windows-only: inkscape"
+  adobe premiere: "- Premiere is Windows-only: kdePackages.kdenlive or shotcut"
+  adobe lightroom: "- Lightroom is Windows-only: darktable"
+  itunes: "- iTunes is Windows-only"
+  icloud: "- iCloud: icloud.com in a browser"
+  ollama: ollama
+  lm studio: lmstudio
+  # Windows' own, and drivers: the new computer has its own.
+  windows: ~
+  microsoft: ~
+  wsl: ~
+  amd: ~
+  amdinstallmanager: ~
+  nvidia: ~
+  intel: ~
+  realtek: ~
+  common files: ~
+  internet explorer: ~
+  reference assemblies: ~
+  msbuild: ~
+  dotnet: ~
+  uninstall information: ~
+  installshield: ~
+  modifiablewindowsapps: ~
+  windowsapps: ~
+  windowspowershell: ~
+  file explorer: ~
+  administrative tools: ~
+  accessibility: ~
+  accessories: ~
+  maintenance: ~
+  system tools: ~
+  startup: ~
+  logidownloadassistant: ~
+  logi download assistant: ~
+  ubuntu: ~
+
+# Catalog packages that are more than an app on nami's computer (a daemon,
+# a group, settings): importing one into the computer's file includes the
+# nami file for it (layers/<file>.nami), which brings the package.
+features:
+  docker: docker
+  docker-compose: docker
+  docker-buildx: docker
+  tailscale: tailscale
+
+# Groups that come with a nami file: someone in one on the old computer is
+# in it on nami's (os.users' `groups:`), when that file is included.
+feature-groups:
+  docker: docker

@@ -1,0 +1,261 @@
+{
+  "bashInteractive": {
+    "name": "bash-interactive-5.3p20",
+    "outputs": {
+      "debug": "/nix/store/alzsk1hrys02lv83w0jhx706c3i9bs6p-bash-interactive-5.3p20-debug",
+      "dev": "/nix/store/1fyngphwizrqdykdynz8p5fr6b4mnp1d-bash-interactive-5.3p20-dev",
+      "doc": "/nix/store/pnc507jbjz4g8v12jh5a85p15vcl9v2c-bash-interactive-5.3p20-doc",
+      "info": "/nix/store/h8ibb69i6lf853hdnb2051hh63720sw5-bash-interactive-5.3p20-info",
+      "man": "/nix/store/4lx7m369lp1y5xn0y2lnbhlxqrdd743s-bash-interactive-5.3p20-man",
+      "out": "/nix/store/x5b3k5pnynrjijw5bzvqrcbdhi5p81d3-bash-interactive-5.3p20"
+    },
+    "description": "GNU Bourne-Again Shell, the de facto standard shell on Linux (for interactive use)",
+    "homepage": "https://www.gnu.org/software/bash/",
+    "mainProgram": "bash",
+    "license": "GPL-3.0-or-later"
+  },
+  "fd": {
+    "name": "fd-10.5.2",
+    "outputs": {
+      "out": "/nix/store/3n1awffppp9qmpxbm70cgyrg47kir8ph-fd-10.5.2"
+    },
+    "description": "Simple, fast and user-friendly alternative to find",
+    "homepage": "https://github.com/sharkdp/fd",
+    "mainProgram": "fd"
+  },
+  "go": {
+    "name": "go-1.27.3",
+    "outputs": {
+      "out": "/nix/store/4iwsn73m5dqlvjddjnaqgy3m34kqmicw-go-1.27.3"
+    },
+    "description": "Go Programming language",
+    "homepage": "https://go.dev/",
+    "mainProgram": "go",
+    "license": "BSD-3-Clause"
+  },
+  "git": {
+    "name": "git-2.56.0",
+    "outputs": {
+      "debug": "/nix/store/9lkhd1zvai0mw02aykjqbi730swwx9qd-git-2.56.0-debug",
+      "doc": "/nix/store/4h2hxpgirh65k9951jk7w7kw5hsrfvcb-git-2.56.0-doc",
+      "out": "/nix/store/6043wra24xi7fhdrw8rg204v31s39nd5-git-2.56.0"
+    },
+    "description": "Distributed version control system",
+    "homepage": "https://git-scm.com/",
+    "mainProgram": "git",
+    "license": "GPL-2.0-only"
+  },
+  "jq": {
+    "name": "jq-1.8.2",
+    "outputs": {
+      "bin": "/nix/store/qg95y8670jagfas9d4aqpsd487clksfp-jq-1.8.2-bin",
+      "dev": "/nix/store/5pawx0dpw3z6qii582nzjic02464wpj3-jq-1.8.2-dev",
+      "doc": "/nix/store/kb4p0y32m501dgq4b89as9kiiv7r80ij-jq-1.8.2-doc",
+      "man": "/nix/store/dzbp7b5i16pyjsa2c9sx13vxahjh9nfq-jq-1.8.2-man",
+      "out": "/nix/store/nbijij12bkp02p00mmvgaxicpbhb7c1d-jq-1.8.2"
+    },
+    "description": "Lightweight and flexible command-line JSON processor",
+    "homepage": "https://jqlang.github.io/jq/",
+    "mainProgram": "jq",
+    "license": "MIT"
+  },
+  "nodejs": {
+    "name": "nodejs-24.22.2",
+    "outputs": {
+      "out": "/nix/store/pl77fywj3l09rzgsssy5drc52lpk9n0d-nodejs-24.22.2"
+    },
+    "description": "Event-driven I/O framework for the V8 JavaScript engine",
+    "homepage": "https://nodejs.org",
+    "mainProgram": "node",
+    "license": "MIT"
+  },
+  "pkg-config": {
+    "name": "pkg-config-wrapper-0.29.2",
+    "outputs": {
+      "doc": "/nix/store/cafy4jwhvjn5w02fwrx7w0znbm7rx1qc-pkg-config-wrapper-0.29.2-doc",
+      "man": "/nix/store/31jd0q0kbyg78197finqp5wnff73d7s2-pkg-config-wrapper-0.29.2-man",
+      "out": "/nix/store/vc97pcn3z7l68hivnifczg7cvypf7bsv-pkg-config-wrapper-0.29.2"
+    },
+    "description": "Tool that allows packages to find out information about other packages (wrapper script)",
+    "homepage": "http://pkg-config.freedesktop.org/wiki/",
+    "mainProgram": "pkg-config",
+    "license": "GPL-2.0-or-later"
+  },
+  "python3": {
+    "name": "python3-3.14.10",
+    "outputs": {
+      "debug": "/nix/store/gqzslfifhbr7h8fk8agryj27n2xhq59p-python3-3.14.10-debug",
+      "out": "/nix/store/9zyabiswyisqky2gd1d3z1ig5rm7dd94-python3-3.14.10"
+    },
+    "description": "High-level dynamically-typed programming language",
+    "homepage": "https://www.python.org",
+    "mainProgram": "python3.14",
+    "license": "Python-2.0"
+  },
+  "ripgrep": {
+    "name": "ripgrep-15.2.0",
+    "outputs": {
+      "out": "/nix/store/76bbldfx3g88jxaqjakksgc5mvl1c3kb-ripgrep-15.2.0"
+    },
+    "description": "Utility that combines the usability of The Silver Searcher with the raw speed of grep",
+    "homepage": "https://github.com/BurntSushi/ripgrep",
+    "mainProgram": "rg"
+  },
+  "stdenv": {
+    "name": "stdenv-linux",
+    "outputs": {
+      "out": "/nix/store/2g8jrv9yvssin2bqdlmlkz04f8mbzlhd-stdenv-linux"
+    },
+    "description": "The default build environment for Unix packages in Nixpkgs",
+    "license": "MIT"
+  },
+  "htop": {
+    "name": "htop-3.5.3",
+    "outputs": {
+      "man": "/nix/store/2ppjls96wa6gw1qs9msxcka1wazv60gr-htop-3.5.3-man",
+      "out": "/nix/store/vqmidp9lswa357mrpwg9bvjfz4w8xf0r-htop-3.5.3"
+    },
+    "description": "Interactive process viewer",
+    "homepage": "https://htop.dev",
+    "mainProgram": "htop",
+    "license": "GPL-2.0-only"
+  },
+  "autoPatchelfHook": {
+    "name": "auto-patchelf-hook",
+    "outputs": {
+      "out": "/nix/store/mmp891dq7ib163kzwynkwcrnbj4f9ysg-auto-patchelf-hook"
+    },
+    "license": "MIT"
+  },
+  "bubblewrap": {
+    "name": "bubblewrap-0.13.1",
+    "outputs": {
+      "dev": "/nix/store/wcxk9zh4wnhlmd85xd2rcxnwb54qm1ir-bubblewrap-0.13.1-dev",
+      "out": "/nix/store/fjvwf1ch0yrpbrgaxhlc2fbf3jac7ibx-bubblewrap-0.13.1"
+    },
+    "description": "Unprivileged sandboxing tool",
+    "homepage": "https://github.com/containers/bubblewrap",
+    "mainProgram": "bwrap",
+    "license": "LGPL-2.1-or-later"
+  },
+  "libgcc": {
+    "name": "gcc-16.2.0",
+    "outputs": {
+      "checksum": "/nix/store/2cfgs4sjv4qm5x6kqq1gp4vjldzr30bs-gcc-16.2.0-checksum",
+      "info": "/nix/store/d5pkf2jrlsyk2x528j4kx9sd4qd1ic70-gcc-16.2.0-info",
+      "lib": "/nix/store/w79cl5jdx1hggkmy4miwhb1j9w1pb7qg-gcc-16.2.0-lib",
+      "libgcc": "/nix/store/0hhgbij2wvdb35m9awyd6n90jd1rxx82-gcc-16.2.0-libgcc",
+      "man": "/nix/store/fkvg25rn78kr8j394lyz1sc255ak8kd9-gcc-16.2.0-man",
+      "out": "/nix/store/wyd2h6nx376rh0wlhgchx5s9myabmvc2-gcc-16.2.0"
+    },
+    "description": "GNU Compiler Collection, version 16.2.0",
+    "homepage": "https://gcc.gnu.org/",
+    "mainProgram": "gcc",
+    "license": "GPL-3.0-or-later"
+  },
+  "fontconfig": {
+    "name": "fontconfig-2.18.3",
+    "outputs": {
+      "bin": "/nix/store/6vwcb1ckzz4q1xjac22pgc195i0ql4x0-fontconfig-2.18.3-bin",
+      "dev": "/nix/store/w5qfsclm7wqzr9cav536lsy7cph9bynj-fontconfig-2.18.3-dev",
+      "lib": "/nix/store/wwdfyaci0v0w1xpjizrmysdxzaa12yck-fontconfig-2.18.3-lib",
+      "out": "/nix/store/ap5wbni6ba2cwg7w3psw5wfrh8l1614r-fontconfig-2.18.3"
+    },
+    "description": "Library for font customization and configuration",
+    "homepage": "http://fontconfig.org/",
+    "license": "BSD-2-Clause"
+  },
+  "freetype": {
+    "name": "freetype-2.14.3",
+    "outputs": {
+      "dev": "/nix/store/jv63q9fiq6kwfj168gn3bb8a7bqiq1r7-freetype-2.14.3-dev",
+      "out": "/nix/store/xj44pp8qzrfpg5v2jir91wj6yp40ii3g-freetype-2.14.3"
+    },
+    "description": "Font rendering engine",
+    "homepage": "https://www.freetype.org/",
+    "mainProgram": "freetype-config",
+    "license": "GPL-2.0-or-later"
+  },
+  "libxkbcommon": {
+    "name": "libxkbcommon-1.13.2",
+    "outputs": {
+      "dev": "/nix/store/pa0flnl7sx72k20555x2id92w5jkplsm-libxkbcommon-1.13.2-dev",
+      "doc": "/nix/store/69fip7h6cw4cbgvdw4sq89pqkmiwqpd8-libxkbcommon-1.13.2-doc",
+      "out": "/nix/store/q1qiwysqf77yj1827yhp63cian3a49cm-libxkbcommon-1.13.2"
+    },
+    "description": "Library to handle keyboard descriptions",
+    "homepage": "https://xkbcommon.org",
+    "mainProgram": "xkbcli",
+    "license": "MIT"
+  },
+  "libxcb": {
+    "name": "libxcb-1.17.0",
+    "outputs": {
+      "dev": "/nix/store/ygg931g2x9kmip3ydlk2mcz96bh0bp8d-libxcb-1.17.0-dev",
+      "doc": "/nix/store/j1n0dzvj8hnxpc9zkhbi2s1ak5nigdij-libxcb-1.17.0-doc",
+      "man": "/nix/store/a8cxqw060hkxcia5gx2s695kqp17qbw3-libxcb-1.17.0-man",
+      "out": "/nix/store/57n57rnir6vl94rvsv8z01i702rjdzy5-libxcb-1.17.0"
+    },
+    "description": "C interface to the X Window System protocol",
+    "homepage": "https://gitlab.freedesktop.org/xorg/lib/libxcb",
+    "license": "X11"
+  },
+  "vulkan-loader": {
+    "name": "vulkan-loader-1.4.363.0",
+    "outputs": {
+      "dev": "/nix/store/fx6z6y408l9lq82p2aka1jknih3gi29n-vulkan-loader-1.4.363.0-dev",
+      "out": "/nix/store/m0n2l6a02f501p358fx6bqqbq0krcyb6-vulkan-loader-1.4.363.0"
+    },
+    "description": "LunarG Vulkan loader",
+    "homepage": "https://www.lunarg.com",
+    "license": "Apache-2.0"
+  },
+  "wayland": {
+    "name": "wayland-1.26.0",
+    "outputs": {
+      "debug": "/nix/store/35gzrb52lhy14mrd120wyisj34dbh14x-wayland-1.26.0-debug",
+      "dev": "/nix/store/q6x1mgjvmn50y9yddmsipqzrpfmabs2f-wayland-1.26.0-dev",
+      "doc": "/nix/store/iaw4986fjzhibkli0ifnrm7h52ax862p-wayland-1.26.0-doc",
+      "man": "/nix/store/yhx3imbr7qcg10ava7ng7fq6x383j1zk-wayland-1.26.0-man",
+      "out": "/nix/store/d25pnckwfjj640xr7cz5aj1vvp9zzync-wayland-1.26.0"
+    },
+    "description": "Core Wayland window system code and protocol",
+    "homepage": "https://wayland.freedesktop.org/",
+    "license": "MIT"
+  },
+  "mesa": {
+    "name": "mesa-26.3.1",
+    "outputs": {
+      "cross_tools": "/nix/store/xyrg72ifbkkvhx7f2d3s5v8w2aylvkb2-mesa-26.3.1-cross_tools",
+      "debug": "/nix/store/jrb7k2wx6myjyrrw2ig41pzrpipimdlq-mesa-26.3.1-debug",
+      "opencl": "/nix/store/nzzy195apn8iby7bnb422kmis49c1qrq-mesa-26.3.1-opencl",
+      "out": "/nix/store/kipxx8sx5pvpm8vb7xzv527pzlc4a5jz-mesa-26.3.1",
+      "spirv2dxil": "/nix/store/5j91sr0yqp67pr48lrq9n80570q6kkxs-mesa-26.3.1-spirv2dxil"
+    },
+    "description": "Open source 3D graphics library",
+    "homepage": "https://www.mesa3d.org/",
+    "license": "MIT"
+  },
+  "glibcLocales": {
+    "name": "glibc-locales-2.44-57",
+    "outputs": {
+      "out": "/nix/store/m2qq5ix2bsqrp935i1s20dcyxfgk31dl-glibc-locales-2.44-57"
+    },
+    "description": "Locale information for the GNU C Library"
+  },
+  "glibcLocalesUtf8": {
+    "name": "glibc-locales-2.44-57",
+    "outputs": {
+      "out": "/nix/store/zpwhrjr8xf7aabl5svd8ks9xvy5rp4cb-glibc-locales-2.44-57"
+    },
+    "description": "Locale information for the GNU C Library"
+  },
+  "dejavu_fonts": {
+    "name": "dejavu-fonts-2.37",
+    "outputs": {
+      "out": "/nix/store/slba59srjsfn2arqfcy7qk48sr3zl6i9-dejavu-fonts-2.37"
+    },
+    "description": "Typeface family based on the Bitstream Vera fonts",
+    "homepage": "https://dejavu-fonts.github.io/"
+  }
+}

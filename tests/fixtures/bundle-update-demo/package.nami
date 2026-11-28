@@ -1,0 +1,12 @@
+# A small program, for tests/app-bundle.sh: a bundle that updates itself.
+# The test makes version 1.0, then 2.0 (its own store path changes; zlib
+# and glibc don't), and checks only what changed is downloaded.
+name: update-demo
+version: "1.0"
+source:
+  path: ./src
+deps: [zlib]
+build: |
+  cc -O2 -Wall -o update-demo demo.c -lz
+install: |
+  install -Dm755 update-demo $out/bin/update-demo

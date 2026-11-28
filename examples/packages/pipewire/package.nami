@@ -1,0 +1,22 @@
+# Sound and screen sharing: each person's own PipeWire, started when an
+# app wants it.
+services:
+  - pipewire.socket: { per-person: true }
+  - pipewire-pulse.socket: { per-person: true }
+files:
+  # Programs that play through ALSA (games, Wine, older programs) play
+  # through PipeWire too, so they mix with the rest: the default ALSA
+  # device is PipeWire's. alsa-lib finds PipeWire's plugin by these paths,
+  # its 64-bit build and the 32-bit one for 32-bit programs (steam lists
+  # it; without it they find no plugin).
+  /etc/alsa/conf.d/50-pipewire.conf: |
+    pcm_type.pipewire {
+      libs.native = /run/current-system/sw/lib/alsa-lib/libasound_module_pcm_pipewire.so ;
+      libs.32Bit = /run/opengl-driver-32/lib/alsa-lib/libasound_module_pcm_pipewire.so ;
+    }
+    ctl_type.pipewire {
+      libs.native = /run/current-system/sw/lib/alsa-lib/libasound_module_ctl_pipewire.so ;
+      libs.32Bit = /run/opengl-driver-32/lib/alsa-lib/libasound_module_ctl_pipewire.so ;
+    }
+    </run/current-system/sw/share/alsa/alsa.conf.d/50-pipewire.conf>
+    </run/current-system/sw/share/alsa/alsa.conf.d/99-pipewire-default.conf>

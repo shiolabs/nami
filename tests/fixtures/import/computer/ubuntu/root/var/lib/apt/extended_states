@@ -1,0 +1,16 @@
+Package: gnome-shell
+Architecture: amd64
+Auto-Installed: 1
+
+Package: nautilus
+Architecture: amd64
+Auto-Installed: 1
+
+Package: libgtk-4-1t64
+Architecture: amd64
+Auto-Installed: 1
+
+Package: libnotify-bin
+Architecture: amd64
+Auto-Installed: 1
+

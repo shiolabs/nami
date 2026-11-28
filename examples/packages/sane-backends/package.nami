@@ -1,0 +1,15 @@
+# Scanning: SANE reads only its own settings and drivers unless told
+# otherwise, so its list is every package's drivers (HP's, driverless
+# network scanners'), worked out when the system is put together.
+# Everyone may use the scanners.
+groups:
+  scanner: everyone
+env:
+  SANE_CONFIG_DIR: /etc/sane.d
+  LD_LIBRARY_PATH: /run/current-system/sw/lib/sane
+files:
+  /etc/sane.d/dll.conf:
+    script: |
+      for p in $packages; do
+        cat "$p"/etc/sane.d/dll.conf "$p"/etc/sane.d/dll.d/* 2>/dev/null || true
+      done > "$out"

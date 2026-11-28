@@ -1,0 +1,22 @@
+# The keyring: passwords for Wi-Fi, accounts and apps, unlocked by your
+# login password (the login rules hand it over, after pam_unix read it).
+# And an SSH agent, as on Ubuntu: gcr's, holding the keys `ssh-add` gives
+# it, in each person's session ($SSH_AUTH_SOCK, from its socket).
+packages:
+  - gcr_4
+services:
+  - gcr-ssh-agent.socket: { per-person: true }
+# Electron's apps (Element, VS Code, Claude Desktop, Slack, …) and Chromium keep their
+# passwords in the keyring only on desktops they know by name: GNOME's, KDE's and a few
+# more (XDG_CURRENT_DESKTOP). On niri they'd keep them in a file
+# instead, or not open at all ("start with --password-store=gnome-libsecret"). This says
+# a GNOME keyring is here, as gnome-session does: Chromium looks at it only when it
+# doesn't know the desktop's name, so the name stays the desktop's own (the portals,
+# Qt's look and the menus go by that).
+env:
+  GNOME_DESKTOP_SESSION_ID: this-is-deprecated
+login:
+  all:
+    - auth optional /run/current-system/sw/lib/security/pam_gnome_keyring.so
+    - password optional /run/current-system/sw/lib/security/pam_gnome_keyring.so use_authtok
+    - session optional /run/current-system/sw/lib/security/pam_gnome_keyring.so auto_start

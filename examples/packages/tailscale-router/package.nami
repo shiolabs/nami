@@ -1,0 +1,17 @@
+# A Tailscale exit node or subnet router forwards others' packets: IP
+# forwarding on. List it in packages:, and say what it advertises in
+# the settings:
+#
+#   packages:
+#     - tailscale-router
+#   files:
+#     /etc/tailscale/up.conf:
+#       set: { advertise-exit-node: true }      # or advertise-routes: [192.168.1.0/24]
+packages:
+  - tailscale
+files:
+  /etc/sysctl.d/60-tailscale.conf:
+    content: |
+      net.ipv4.ip_forward = 1
+      net.ipv6.conf.all.forwarding = 1
+    restarts: systemd-sysctl.service

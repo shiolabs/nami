@@ -1,0 +1,16 @@
+# The catalog's tools on a computer without Nix or Docker (namiOS):
+# index/build-index.sh runs itself in them (`nami run --project index`).
+packages:
+  # Evaluating nixpkgs (in a store of its own: build-index.sh).
+  - nix-eval-jobs
+  - nixVersions.latest
+  - jq
+  - zstd
+  - xz
+  - curl
+  - gnutar
+  - brotli  # index/history.py reads releases' packages.json.br
+  - python3
+  - python314Packages.pyyaml  # index/apps.py and meta.py: Debian's icons and AppStream
+  - python314Packages.pillow  # packaging/publish-icons.py
+  - imagemagick  # packaging/publish-icons.py: icons that came as other formats

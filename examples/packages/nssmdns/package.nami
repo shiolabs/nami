@@ -1,0 +1,2 @@
+# .local names (computer.local) for every program, through avahi.
+name-lookup: ["mdns_minimal [NOTFOUND=return]"]

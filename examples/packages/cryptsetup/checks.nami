@@ -1,0 +1,7 @@
+# How to tell cryptsetup works, on a computer nami made (tests/usb.sh runs these).
+"encrypted disks: cryptsetup, in the boot archive":
+  run: grep -ac 'cryptsetup' /run/booted-system/initrd | sed 's/^/N=/'
+  expect: "N=[1-9]"
+"encrypted disks: the device mapper's udev rules":
+  run: ls /etc/udev/rules.d/
+  expect: "10-dm.rules"

@@ -1,0 +1,7 @@
+# 3D and making: model in 3D, print it, design parts and circuits.
+# Others: orca-slicer, kicad, librecad.
+packages:
+  - blender
+  - freecad
+  - prusa-slicer
+  - openscad

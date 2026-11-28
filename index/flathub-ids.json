@@ -1,0 +1,19 @@
+{
+ "chromium": "org.chromium.Chromium",
+ "thunderbird": "org.mozilla.Thunderbird",
+ "element-desktop": "im.riot.Riot",
+ "zotero": "org.zotero.Zotero",
+ "bitwarden-desktop": "com.bitwarden.desktop",
+ "vscode": "com.visualstudio.code",
+ "spotify": "com.spotify.Client",
+ "google-chrome": "com.google.Chrome",
+ "zoom-us": "us.zoom.Zoom",
+ "slack": "com.slack.Slack",
+ "steam": "com.valvesoftware.Steam",
+ "discord": "com.discordapp.Discord",
+ "obsidian": "md.obsidian.Obsidian",
+ "teams-for-linux": "com.github.IsmaelMartinez.teams_for_linux",
+ "jetbrains.idea-ultimate": "com.jetbrains.IntelliJ-IDEA-Ultimate",
+ "jetbrains.pycharm-professional": "com.jetbrains.PyCharm-Professional",
+ "onlyoffice-desktopeditors": "org.onlyoffice.desktopeditors"
+}

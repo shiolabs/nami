@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "sources": {
+    "https://github.com/markedjs/marked/archive/refs/tags/v18.3.0.tar.gz": {
+      "sha256": "23a7f2579bb10e292ed30ce0e87a423d5ca3e26c8320276b503cfc0c70eeb53a"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+# How to tell docker works, on a computer nami made (tests/usb.sh runs these).
+"Docker: dockerd runs, and listens on its socket":
+  run: echo $(systemctl is-active docker.socket docker.service) $(stat -c '%a %G' /run/docker.sock)
+  expect: "^active active 660 docker$"
+"Docker: its kernel modules":
+  run: echo $(lsmod | grep -oE '^(overlay|br_netfilter) ' | sort)
+  expect: "^br_netfilter overlay$"
+"Docker: docker without sudo, for the docker group (overlay storage, systemd's cgroups)":
+  run: docker info --format '{{.ServerVersion}} {{.Driver}} {{.CgroupDriver}}'
+  expect: "^[0-9]+\\.[0-9.]+ overlay(2|fs) systemd$"
+"Docker: docker compose and docker buildx":
+  run: echo $(docker compose version) / $(docker buildx version)
+  expect: "^Docker Compose version v?[0-9]+\\.[0-9.]+ / github.com/docker/buildx v[0-9]"
+"Docker: daemon.json, if system.nami gives one, is one dockerd takes":
+  run: if [ -e /etc/docker/daemon.json ]; then dockerd --validate --config-file /etc/docker/daemon.json; else echo "configuration OK (none)"; fi
+  expect: "^configuration OK"
+"Docker: its data on the disk, kept through updates":
+  run: d=$(docker info --format '{{.DockerRootDir}}'); echo $d $(findmnt -no FSTYPE -T $d)
+  expect: "^/[^ ]+ (ext4|btrfs|xfs)$"

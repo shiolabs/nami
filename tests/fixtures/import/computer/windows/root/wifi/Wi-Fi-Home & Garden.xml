@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
+	<name>Home &amp; Garden</name>
+	<SSIDConfig>
+		<SSID>
+			<hex>00</hex>
+			<name>Home &amp; Garden</name>
+		</SSID>
+	</SSIDConfig>
+	<connectionType>ESS</connectionType>
+	<connectionMode>auto</connectionMode>
+	<MSM>
+		<security>
+			<authEncryption>
+				<authentication>WPA3SAE</authentication>
+				<encryption>AES</encryption>
+				<useOneX>false</useOneX>
+			</authEncryption>
+			<sharedKey><keyType>passPhrase</keyType><protected>false</protected><keyMaterial>garden-pass-123</keyMaterial></sharedKey>
+		</security>
+	</MSM>
+</WLANProfile>

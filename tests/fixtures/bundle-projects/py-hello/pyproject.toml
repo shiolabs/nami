@@ -1,0 +1,14 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "py-hello"
+version = "1.2.0"
+description = "Says hello, from a bundle"
+requires-python = ">=3.11"
+# One from PyPI: the bundle carries it.
+dependencies = ["idna>=3"]
+
+[project.scripts]
+py-hello = "py_hello.cli:main"

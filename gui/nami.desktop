@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=nami
+Comment=Install apps, keep them up to date, and set up this computer
+Exec=nami-gui
+Icon=nami
+Terminal=false
+StartupWMClass=nami
+Categories=System;PackageManager;
+Keywords=apps;install;software;packages;updates;sync;backup;users;namios;
+NotShowIn=niri;

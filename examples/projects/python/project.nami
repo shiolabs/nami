@@ -1,0 +1,6 @@
+# Python, with uv for dependencies. The tools this project needs; `nami shell` to use them.
+packages:
+  - python3
+  - uv
+tasks:
+  test: uv run pytest

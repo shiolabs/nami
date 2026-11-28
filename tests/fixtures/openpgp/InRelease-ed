@@ -1,0 +1,16 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: test
+Suite: stable
+SHA256:
+ abc 12 main/binary-amd64/Packages
+- - dashed line   
+
+-----BEGIN PGP SIGNATURE-----
+
+iIYEARYKAC4WIQTTVsCAtbLQtFrEkHMaaLRgV9+zoAUCauuBnBAcZWRAdGVzdC5p
+bnZhbGlkAAoJEBpotGBX37OgDEQBAIf4P1t20Oo9ZIOGNWqhkmGbb2Z9Dd3oBJJk
+HyQM4wjEAP9YD/RazjFF7cwYyK32q/klHA8AAANEPGAefxxtL2IlCQ==
+=dOYF
+-----END PGP SIGNATURE-----

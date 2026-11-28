@@ -1,0 +1,8 @@
+{
+  "name": "electron-hello",
+  "productName": "Electron Hello",
+  "version": "0.5.0",
+  "description": "A window, from a bundle",
+  "main": "main.js",
+  "devDependencies": { "electron": "^43.0.0" }
+}

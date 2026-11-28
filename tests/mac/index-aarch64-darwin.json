@@ -1,0 +1,141 @@
+{
+  "bashInteractive": {
+    "name": "bash-interactive-5.3p20",
+    "outputs": {
+      "dev": "/nix/store/xymwlnl7clwdzp4cniaai5dbibq8dvr3-bash-interactive-5.3p20-dev",
+      "doc": "/nix/store/w5kzxppakb0i6g9wrbbiwdixycc16lhj-bash-interactive-5.3p20-doc",
+      "info": "/nix/store/4y8vrg7d09aja2jk1ipcs2hr428v7x5b-bash-interactive-5.3p20-info",
+      "man": "/nix/store/707kml2xwx5hmgvky0936jbzzc9m0a2l-bash-interactive-5.3p20-man",
+      "out": "/nix/store/16imcy0hiwbc3c6j2n0cn17a6z1mncd5-bash-interactive-5.3p20"
+    },
+    "description": "GNU Bourne-Again Shell, the de facto standard shell on Linux (for interactive use)",
+    "homepage": "https://www.gnu.org/software/bash/",
+    "mainProgram": "bash",
+    "license": "GPL-3.0-or-later"
+  },
+  "fd": {
+    "name": "fd-10.5.2",
+    "outputs": {
+      "out": "/nix/store/xd1szxsxhcp3hmx2c72acdqklvcikyqi-fd-10.5.2"
+    },
+    "description": "Simple, fast and user-friendly alternative to find",
+    "homepage": "https://github.com/sharkdp/fd",
+    "mainProgram": "fd"
+  },
+  "go": {
+    "name": "go-1.27.3",
+    "outputs": {
+      "out": "/nix/store/0n6nm2j8ymbrnzb9kc5y5sar4d9vp93s-go-1.27.3"
+    },
+    "description": "Go Programming language",
+    "homepage": "https://go.dev/",
+    "mainProgram": "go",
+    "license": "BSD-3-Clause"
+  },
+  "git": {
+    "name": "git-2.56.0",
+    "outputs": {
+      "doc": "/nix/store/891py8svml38cqvi5i0wyf99i8mjza53-git-2.56.0-doc",
+      "out": "/nix/store/5gpqd5y6g8wav4sgry5i9qmp0kwnnwby-git-2.56.0"
+    },
+    "description": "Distributed version control system",
+    "homepage": "https://git-scm.com/",
+    "mainProgram": "git",
+    "license": "GPL-2.0-only"
+  },
+  "htop": {
+    "name": "htop-3.5.3",
+    "outputs": {
+      "man": "/nix/store/pnhqw4wp3vdc1hzjzy9n8asbxqdvpv2l-htop-3.5.3-man",
+      "out": "/nix/store/qqzhznfnz3qxsy80qzk5dhhil0pzvh9p-htop-3.5.3"
+    },
+    "description": "Interactive process viewer",
+    "homepage": "https://htop.dev",
+    "mainProgram": "htop",
+    "license": "GPL-2.0-only"
+  },
+  "jq": {
+    "name": "jq-1.8.2",
+    "outputs": {
+      "bin": "/nix/store/lq43hfzpp8v2s9vwfrbhrx0grizymbd2-jq-1.8.2-bin",
+      "dev": "/nix/store/9iv19k0ns8mr91nrzyy64finyw45p0ws-jq-1.8.2-dev",
+      "doc": "/nix/store/y0jikij8mp03y1g31dsgxyb47zrka16h-jq-1.8.2-doc",
+      "man": "/nix/store/5ix3nvhgpy8lf2w5c3f0q77l7vjlw7q4-jq-1.8.2-man",
+      "out": "/nix/store/gncx3i2q7k2ysikaf884p8sjk8yxyq5s-jq-1.8.2"
+    },
+    "description": "Lightweight and flexible command-line JSON processor",
+    "homepage": "https://jqlang.github.io/jq/",
+    "mainProgram": "jq",
+    "license": "MIT"
+  },
+  "pkg-config": {
+    "name": "pkg-config-wrapper-0.29.2",
+    "outputs": {
+      "doc": "/nix/store/b9ijxpzwcvshjwk526wcp4wjqqribf42-pkg-config-wrapper-0.29.2-doc",
+      "man": "/nix/store/q933xm79jfqdz055byxdcmika0w1g5k3-pkg-config-wrapper-0.29.2-man",
+      "out": "/nix/store/0qjl1qaf0c2jr1xd7qhlv8p6g6va41qk-pkg-config-wrapper-0.29.2"
+    },
+    "description": "Tool that allows packages to find out information about other packages (wrapper script)",
+    "homepage": "http://pkg-config.freedesktop.org/wiki/",
+    "mainProgram": "pkg-config",
+    "license": "GPL-2.0-or-later"
+  },
+  "python3": {
+    "name": "python3-3.14.10",
+    "outputs": {
+      "out": "/nix/store/3j0hvszcqcb2vwm5dz0xxfb06cx49k86-python3-3.14.10"
+    },
+    "description": "High-level dynamically-typed programming language",
+    "homepage": "https://www.python.org",
+    "mainProgram": "python3.14",
+    "license": "Python-2.0"
+  },
+  "ripgrep": {
+    "name": "ripgrep-15.2.0",
+    "outputs": {
+      "out": "/nix/store/gaq30i78mjd4ib5cm7y423h101p500v1-ripgrep-15.2.0"
+    },
+    "description": "Utility that combines the usability of The Silver Searcher with the raw speed of grep",
+    "homepage": "https://github.com/BurntSushi/ripgrep",
+    "mainProgram": "rg"
+  },
+  "stdenv": {
+    "name": "stdenv-darwin",
+    "outputs": {
+      "out": "/nix/store/zvj6vj0irzl7d1isca6i25mn83i4al5z-stdenv-darwin"
+    },
+    "description": "The default build environment for Unix packages in Nixpkgs",
+    "license": "MIT"
+  },
+  "nodejs": {
+    "name": "nodejs-24.22.2",
+    "outputs": {
+      "out": "/nix/store/vxh4ylwcdwyqhils1q6084ih7l5qinwk-nodejs-24.22.2"
+    },
+    "description": "Event-driven I/O framework for the V8 JavaScript engine",
+    "homepage": "https://nodejs.org",
+    "mainProgram": "node",
+    "license": "MIT"
+  },
+  "alacritty": {
+    "name": "alacritty-0.17.0",
+    "outputs": {
+      "out": "/nix/store/21kgkflq1wsva98h0v3y328nym9l190d-alacritty-0.17.0",
+      "terminfo": "/nix/store/8xjqb2wbl538w1pxyj2nwap0lrk87ww9-alacritty-0.17.0-terminfo"
+    },
+    "description": "Cross-platform, GPU-accelerated terminal emulator",
+    "homepage": "https://github.com/alacritty/alacritty",
+    "mainProgram": "alacritty",
+    "license": "Apache-2.0"
+  },
+  "itsycal": {
+    "name": "itsycal-0.15.12",
+    "outputs": {
+      "out": "/nix/store/hd4dayyxngixvvn6fd9hxl0s6v3jda3n-itsycal-0.15.12"
+    },
+    "description": "Tiny menu bar calendar",
+    "homepage": "https://www.mowglii.com/itsycal/",
+    "mainProgram": "itsycal",
+    "license": "BSD-2-Clause"
+  }
+}

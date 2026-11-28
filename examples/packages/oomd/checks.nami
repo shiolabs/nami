@@ -1,0 +1,6 @@
+# How to tell oomd works, on a computer nami made (tests/usb.sh runs these).
+# (Watched, for swap and for pressure: the person's apps, app.slice, and not all of
+# user@.service, the desktop too.)
+"running out of memory: systemd-oomd watches each person's apps":
+  run: 'echo $(systemctl is-active systemd-oomd) $(systemctl --user show app.slice -p ManagedOOMSwap) $(systemctl --user show app.slice -p ManagedOOMMemoryPressure) $(systemctl show "user@$(id -u).service" -p ManagedOOMMemoryPressure) $(oomctl | sed -n "s|^.*Path: /user.slice/user-$(id -u).slice/user@$(id -u).service|watched=|p")'
+  expect: "^active ManagedOOMSwap=kill ManagedOOMMemoryPressure=kill ManagedOOMMemoryPressure=auto watched=/app.slice watched=/app.slice$"

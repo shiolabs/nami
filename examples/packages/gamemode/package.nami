@@ -1,0 +1,21 @@
+# GameMode (Feral Interactive's): while a game runs, the computer is set
+# for it, with the processor's fast governor and the screensaver held
+# back. `- gamemode` in system.nami, then in Steam a game's launch
+# options: `gamemoderun %command%`.
+#
+# gamemoded starts by itself, for whoever asks (D-Bus starts it). It
+# changes the governor through polkit's pkexec, which lets the gamemode
+# group do it without a password: everyone is in it.
+groups:
+  gamemode: everyone
+files:
+  /etc/polkit-1/rules.d/50-gamemode.rules: |
+    polkit.addRule(function (action, subject) {
+      if ((action.id == "com.feralinteractive.GameMode.governor-helper" ||
+           action.id == "com.feralinteractive.GameMode.gpu-helper" ||
+           action.id == "com.feralinteractive.GameMode.cpu-helper" ||
+           action.id == "com.feralinteractive.GameMode.procsys-helper") &&
+          subject.isInGroup("gamemode")) {
+        return polkit.Result.YES;
+      }
+    });

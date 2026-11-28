@@ -1,0 +1,15 @@
+# Printing, as Ubuntu has it: CUPS with the common drivers (Gutenprint,
+# HP's), printers on the network found by themselves (avahi, in base),
+# and Settings' Printers panel. desktop lists this. How CUPS runs
+# is in packages/cups/package.nami.
+packages:
+  - cups
+  - cups-filters
+  - cups-pk-helper
+  - gutenprint
+  - hplip
+  # Brother's and Samsung's lasers (printer-driver-brlaser and -splix).
+  - brlaser
+  - splix
+  - ghostscript
+  - ipp-usb

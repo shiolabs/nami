@@ -1,0 +1,5 @@
+{
+  "log-driver": "local",
+  "registry-mirrors": ["https://mirror.example.org"],
+  "live-restore": true
+}

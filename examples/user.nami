@@ -1,0 +1,30 @@
+# An example user.nami: what one person has. As ~/user.nami, `nami apply`
+# makes it so, as a new generation; anywhere else (a dotfiles repo),
+# `nami apply ./user.nami`. `nami undo` undoes it.
+packages:
+  - ripgrep
+  - jq
+  # A package's own settings, under it. Nested YAML becomes the file's
+  # own format (from its name); text is written as is.
+  - git:
+      ~/.gitconfig:
+        user: { name: Your Name, email: you@example.org }
+        alias: { co: checkout, lg: log --oneline --graph }
+        init: { defaultBranch: main }
+  - starship:
+      ~/.config/starship.toml:
+        add_newline: false
+  - vim:
+      ~/.vimrc: |
+        set number
+      # Or a file or folder from next to this file:
+      # ~/.vim: { source: ./dotfiles/vim }
+
+# What's no one package's.
+env:
+  EDITOR: vim
+aliases:
+  ll: ls -la
+  gs: git status
+
+history: 10

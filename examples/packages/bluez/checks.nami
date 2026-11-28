@@ -1,0 +1,4 @@
+# How to tell bluez works, on a computer nami made (tests/usb.sh runs these).
+"Bluetooth starts with an adapter":
+  run: systemctl is-enabled bluetooth
+  expect: "enabled"

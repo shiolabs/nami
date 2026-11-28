@@ -1,0 +1,11 @@
+#!/bin/sh
+# Runs a command behind everything else on the desktop: when the CPU is
+# short it gets a fifth of what an app gets, and it can't take the memory
+# the desktop needs (past 75% it's slowed down, past 85% it's what's killed,
+# not the compositor). With no user systemd (CI, a container): just runs it.
+# usage: dev/quiet <command> [args...]
+if systemctl --user show -p Version >/dev/null 2>&1; then
+  exec systemd-run --user --scope --quiet --collect \
+    -p CPUWeight=20 -p MemoryHigh=75% -p MemoryMax=85% -- "$@"
+fi
+exec "$@"

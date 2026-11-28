@@ -1,0 +1,16 @@
+# shadow: changing your password, and the user namespaces of containers.
+setuid: [bin/passwd, bin/newuidmap, bin/newgidmap]
+files:
+  # Its settings for adding people, with one more: a new person's home is
+  # theirs alone (0700), as nami makes one, also when it's added another
+  # way (Settings' accounts, AccountsService, useradd), not readable by
+  # everyone else on the computer.
+  /etc/login.defs:
+    script: |
+      for p in $packages; do
+        if [ -f "$p/etc/login.defs" ]; then
+          grep -v '^HOME_MODE' "$p/etc/login.defs" > "$out"
+          break
+        fi
+      done
+      printf '\n# A new home is its person'"'"'s alone.\nHOME_MODE\t0700\n' >> "$out"

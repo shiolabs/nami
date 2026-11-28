@@ -1,0 +1,39 @@
+# The boot splash, as Ubuntu's: plymouth with the firmware's logo and a
+# spinner below it (the bgrt theme; a plain spinner where the firmware has
+# no logo), from early in the start until the login screen takes over
+# (GDM quits it without a flicker). The serial console stays text. The
+# kernel's options have `quiet splash`, as Ubuntu's; `plymouth.enable=0`
+# turns it off, and Esc shows the messages behind it. (It starts once the
+# system does, after the boot archive: an encrypted disk's password is
+# still asked in text, before it.) desktop lists this.
+packages:
+  - plymouth
+files:
+  /etc/plymouth/plymouthd.conf: |
+    [Daemon]
+    Theme=bgrt
+    ShowDelay=0
+    DeviceTimeout=8
+  # Where plymouth looks for its plugins and themes; on the screen only
+  # (on a serial line too it would show its text there instead).
+  /etc/systemd/system/plymouth-start.service.d/nami.conf: |
+    [Service]
+    ExecStartPre=/run/current-system/sw/bin/mkdir -p /run/plymouth /var/lib/plymouth
+    ExecStartPre=/run/current-system/sw/bin/ln -sfn /run/current-system/sw/lib/plymouth /run/plymouth/plugins
+    ExecStartPre=/run/current-system/sw/bin/ln -sfn /run/current-system/sw/share/plymouth/themes /run/plymouth/themes
+    ExecStart=
+    ExecStart=/run/current-system/sw/bin/plymouthd --mode=boot --pid-file=/run/plymouth/pid --attach-to-session --ignore-serial-consoles
+  # Told the disk can be written once it's running, not before (the root
+  # is writable from the start here, so that comes early): else it never
+  # writes its timings.
+  /etc/systemd/system/plymouth-read-write.service.d/nami.conf: |
+    [Unit]
+    After=plymouth-start.service
+  # Started early; its log and timings written once the disk can be;
+  # quit by GDM (or by these, without a login screen).
+  /etc/systemd/system/sysinit.target.d/plymouth.conf: |
+    [Unit]
+    Wants=plymouth-start.service plymouth-read-write.service systemd-ask-password-plymouth.path
+  /etc/systemd/system/multi-user.target.d/plymouth.conf: |
+    [Unit]
+    Wants=plymouth-quit.service plymouth-quit-wait.service

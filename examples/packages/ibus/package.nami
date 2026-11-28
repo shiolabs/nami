@@ -1,0 +1,5 @@
+# IBus, typing in other languages: its engines (input-cjk's, or
+# any package that brings one) are wherever the computer's packages are,
+# not in IBus's own folder, where it would look by itself.
+env:
+  IBUS_COMPONENT_PATH: /run/current-system/sw/share/ibus/component

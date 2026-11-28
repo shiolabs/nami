@@ -1,0 +1,129 @@
+# NVIDIA's driver for older cards: Maxwell, Pascal and Volta (GTX 750 to
+# GTX 1080 Ti, Quadro M and P, Titan V), which the nvidia example's driver
+# no longer has. `- nvidia-legacy` in system.nami, in place of nvidia;
+# `nami doctor` says which of the two a computer's card is for. Cards from
+# Turing on (GTX 16xx, RTX 20xx and newer) take nvidia.
+#
+# The driver is NVIDIA's 535, the long-lived branch, with NVIDIA's own
+# (closed) kernel modules: the open ones are for Turing on only. Its
+# libraries and modules aren't free software, so the binary cache doesn't
+# have them: nami builds them once from NVIDIA's download (a few minutes).
+# Its modules are built for nixpkgs' default kernel (linuxPackages), so
+# this goes without a kernel-* add-on.
+#
+# Secure Boot stays on: the kernel (nixpkgs') doesn't check modules'
+# signatures, so NVIDIA's modules load unsigned.
+drivers:
+  # OpenGL, EGL, Vulkan, GBM and VDPAU, next to mesa's in
+  # /run/opengl-driver, and EGL's ways onto Wayland and GBM.
+  graphics: [linuxPackages.nvidia_x11_legacy535.out, egl-wayland, egl-gbm]
+  # The 32-bit ones, for 32-bit programs (most of Steam's games).
+  graphics-32bit: [linuxPackages.nvidia_x11_legacy535.lib32]
+  # The kernel modules (nvidia, nvidia_modeset, nvidia_drm, nvidia_uvm),
+  # built for the system's kernel.
+  kernel-modules: [linuxPackages.nvidia_x11_legacy535_modules]
+packages:
+  # nvidia-smi, nvidia-bug-report.sh, and CUDA's MPS.
+  - linuxPackages.nvidia_x11_legacy535.bin
+  # fgconsole and chvt, which suspending with the card uses.
+  - kbd
+services:
+  - nvidia-suspend.service
+  - nvidia-hibernate.service
+  - nvidia-resume.service
+files:
+  /etc/modprobe.d/nvidia.conf: |
+    # nouveau (and nova, after it) would take the card first.
+    blacklist nouveau
+    blacklist nova_core
+    blacklist nvidiafb
+    # The desktop draws through the kernel (KMS), as Wayland needs.
+    options nvidia_drm modeset=1
+    # What's on the screen survives suspend: the card's memory is saved on
+    # the disk, not in RAM (the services below tell the driver when).
+    options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp
+  /etc/udev/rules.d/60-nvidia.rules: |
+    # udev loads nvidia for an NVIDIA card (by its PCI id); once it's
+    # in, the rest: the display (nvidia_drm, with nvidia_modeset) and
+    # CUDA's memory (nvidia_uvm). Without a card, nvidia doesn't load,
+    # and neither do these.
+    ACTION=="add", SUBSYSTEM=="module", KERNEL=="nvidia", RUN{builtin}+="kmod load nvidia_modeset nvidia_drm nvidia_uvm"
+    # The device files the driver's libraries open.
+    ACTION=="add", SUBSYSTEM=="module", KERNEL=="nvidia", RUN+="/run/current-system/sw/bin/sh -c 'PATH=/run/current-system/sw/bin; mknod -m 666 /dev/nvidiactl c 195 255; for i in $$(cat /proc/driver/nvidia/gpus/*/information | grep Minor | cut -d \  -f 4); do mknod -m 666 /dev/nvidia$${i} c 195 $${i}; done'"
+    ACTION=="add", SUBSYSTEM=="module", KERNEL=="nvidia_modeset", RUN+="/run/current-system/sw/bin/sh -c 'PATH=/run/current-system/sw/bin; mknod -m 666 /dev/nvidia-modeset c 195 254'"
+    ACTION=="add", SUBSYSTEM=="module", KERNEL=="nvidia_uvm", RUN+="/run/current-system/sw/bin/sh -c 'PATH=/run/current-system/sw/bin; d=$$(grep nvidia-uvm /proc/devices | cut -d \  -f 1); mknod -m 666 /dev/nvidia-uvm c $$d 0; mknod -m 666 /dev/nvidia-uvm-tools c $$d 1'"
+  # Suspend and hibernate: the 535 driver is told by these (newer ones by
+  # the kernel itself), as NVIDIA's own nvidia-*.service files do.
+  /etc/systemd/system/nvidia-suspend.service: |
+    [Unit]
+    Description=NVIDIA system suspend actions
+    Before=systemd-suspend.service
+    [Service]
+    Type=oneshot
+    Environment=PATH=/run/current-system/sw/bin
+    ExecStart=/run/opengl-driver/bin/nvidia-sleep.sh suspend
+    [Install]
+    RequiredBy=systemd-suspend.service
+  /etc/systemd/system/nvidia-hibernate.service: |
+    [Unit]
+    Description=NVIDIA system hibernate actions
+    Before=systemd-hibernate.service
+    [Service]
+    Type=oneshot
+    Environment=PATH=/run/current-system/sw/bin
+    ExecStart=/run/opengl-driver/bin/nvidia-sleep.sh hibernate
+    [Install]
+    RequiredBy=systemd-hibernate.service
+  /etc/systemd/system/nvidia-resume.service: |
+    [Unit]
+    Description=NVIDIA system resume actions
+    After=systemd-suspend.service systemd-hibernate.service
+    [Service]
+    Type=oneshot
+    Environment=PATH=/run/current-system/sw/bin
+    ExecStart=/run/opengl-driver/bin/nvidia-sleep.sh resume
+    [Install]
+    RequiredBy=systemd-suspend.service systemd-hibernate.service
+  # With an NVIDIA card, the login screen waits for udev to have loaded
+  # its driver (a few seconds), so it starts on the card and not on the
+  # firmware's screen, which nvidia_drm then takes away.
+  /etc/systemd/system/gdm.service.d/nvidia.conf: |
+    [Service]
+    ExecStartPre=-/run/current-system/sw/bin/sh -c 'PATH=/run/current-system/sw/bin; if grep -qsx 0x10de /sys/bus/pci/devices/*/vendor; then udevadm settle -t 15; fi'
+hardware:
+  # Made by packaging/nvidia-ids.py from NVIDIA's own list of cards.
+  pci: [
+    "10de:1340", "10de:1341", "10de:1344", "10de:1346", "10de:1347",
+    "10de:1348", "10de:1349", "10de:134b", "10de:134d", "10de:134e",
+    "10de:134f", "10de:137a", "10de:137b", "10de:137d", "10de:1380",
+    "10de:1381", "10de:1382", "10de:1390", "10de:1391", "10de:1392",
+    "10de:1393", "10de:1398", "10de:1399", "10de:139a", "10de:139b",
+    "10de:139c", "10de:139d", "10de:13b0", "10de:13b1", "10de:13b2",
+    "10de:13b3", "10de:13b4", "10de:13b6", "10de:13b9", "10de:13ba",
+    "10de:13bb", "10de:13bc", "10de:13c0", "10de:13c2", "10de:13d7",
+    "10de:13d8", "10de:13d9", "10de:13da", "10de:13f0", "10de:13f1",
+    "10de:13f2", "10de:13f3", "10de:13f8", "10de:13f9", "10de:13fa",
+    "10de:13fb", "10de:1401", "10de:1402", "10de:1406", "10de:1407",
+    "10de:1427", "10de:1430", "10de:1431", "10de:1436", "10de:15f0",
+    "10de:15f7", "10de:15f8", "10de:15f9", "10de:1617", "10de:1618",
+    "10de:1619", "10de:161a", "10de:1667", "10de:174d", "10de:174e",
+    "10de:179c", "10de:17c2", "10de:17c8", "10de:17f0", "10de:17f1",
+    "10de:17fd", "10de:1b00", "10de:1b02", "10de:1b06", "10de:1b30",
+    "10de:1b38", "10de:1b80", "10de:1b81", "10de:1b82", "10de:1b83",
+    "10de:1b84", "10de:1b87", "10de:1ba0", "10de:1ba1", "10de:1ba2",
+    "10de:1bb0", "10de:1bb1", "10de:1bb3", "10de:1bb4", "10de:1bb5",
+    "10de:1bb6", "10de:1bb7", "10de:1bb8", "10de:1bb9", "10de:1bbb",
+    "10de:1bc7", "10de:1be0", "10de:1be1", "10de:1c02", "10de:1c03",
+    "10de:1c04", "10de:1c06", "10de:1c07", "10de:1c09", "10de:1c20",
+    "10de:1c21", "10de:1c22", "10de:1c23", "10de:1c30", "10de:1c31",
+    "10de:1c60", "10de:1c61", "10de:1c62", "10de:1c81", "10de:1c82",
+    "10de:1c83", "10de:1c8c", "10de:1c8d", "10de:1c8f", "10de:1c90",
+    "10de:1c91", "10de:1c92", "10de:1c94", "10de:1c96", "10de:1cb1",
+    "10de:1cb2", "10de:1cb3", "10de:1cb6", "10de:1cba", "10de:1cbb",
+    "10de:1cbc", "10de:1cbd", "10de:1cfa", "10de:1cfb", "10de:1d01",
+    "10de:1d02", "10de:1d10", "10de:1d11", "10de:1d12", "10de:1d13",
+    "10de:1d16", "10de:1d33", "10de:1d34", "10de:1d52", "10de:1d81",
+    "10de:1db1", "10de:1db3", "10de:1db4", "10de:1db5", "10de:1db6",
+    "10de:1db7", "10de:1db8", "10de:1dba", "10de:1df0", "10de:1df2",
+    "10de:1df5", "10de:1df6"
+  ]

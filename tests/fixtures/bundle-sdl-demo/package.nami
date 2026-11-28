@@ -1,0 +1,13 @@
+# A small SDL2 + OpenGL program, for tests/app-bundle.sh: `nami bundle` from
+# a recipe, and the host's graphics driver drawing for a bundle.
+name: sdl-demo
+version: "1.0"
+source:
+  path: ./src
+build-deps: [pkg-config]
+deps: [SDL2]
+build: |
+  cc -O2 -Wall -o sdl-demo demo.c $(pkg-config --cflags --libs sdl2)
+install: |
+  install -Dm755 sdl-demo $out/bin/sdl-demo
+  install -Dm644 sdl-demo.desktop $out/share/applications/sdl-demo.desktop

@@ -1,0 +1,65 @@
+# GDM, the login screen: its users, its login rules, its settings, and the
+# environment it hands the desktops it starts.
+# Its greeter is GNOME's shell, in a session of its own.
+packages:
+  - gnome-session
+  - gnome-session.sessions
+  - gnome-shell
+  - mutter
+  - gnome-settings-daemon
+files:
+  # Its own user, and the users its login screens run as.
+  /etc/sysusers.d/gdm.conf: |
+    u gdm 132 "GDM" /run/gdm
+    u gdm-greeter 60578:gdm "GDM greeter" /run/gdm/home/gdm-greeter
+    u gdm-greeter-2 60579:gdm "GDM greeter" /run/gdm/home/gdm-greeter-2
+    u gdm-greeter-3 60580:gdm "GDM greeter" /run/gdm/home/gdm-greeter-3
+    u gdm-greeter-4 60581:gdm "GDM greeter" /run/gdm/home/gdm-greeter-4
+    u gdm-greeter-5 60582:gdm "GDM greeter" /run/gdm/home/gdm-greeter-5
+  /etc/tmpfiles.d/gdm.conf: |
+    d /var/lib/gdm 0750 gdm gdm -
+  /etc/gdm/custom.conf: |
+    [daemon]
+    WaylandEnable=true
+  # The login screen's settings: everyone's (os.settings: the keyboard,
+  # the look), then GDM's own defaults.
+  /etc/dconf/profile/gdm: |
+    user-db:user
+    system-db:local
+    file-db:/run/current-system/sw/share/gdm/greeter-dconf-defaults
+  # Where things are, for the desktops it starts (its own unit has the rest).
+  /etc/systemd/system/gdm.service.d/nami.conf: |
+    [Unit]
+    After=systemd-user-sessions.service
+    [Service]
+    EnvironmentFile=/etc/nami-os/environment
+settings:
+  org.gnome.login-screen:
+    logo: ""
+login:
+  # The password box, and the finger next to it (once one is enrolled:
+  # fprintd).
+  gdm-password: password
+  gdm-fingerprint: |
+    auth required /run/current-system/sw/lib/security/pam_fprintd.so
+    account required /run/current-system/sw/lib/security/pam_unix.so
+    password required /run/current-system/sw/lib/security/pam_deny.so
+    session required /run/current-system/sw/lib/security/pam_env.so conffile=/etc/pam/environment readenv=0
+    session required /run/current-system/sw/lib/security/pam_unix.so
+    session optional /run/current-system/sw/lib/security/pam_loginuid.so
+    session optional /run/current-system/sw/lib/security/pam_keyinit.so force revoke
+    session optional /run/current-system/sw/lib/security/pam_systemd.so
+    session optional /run/current-system/sw/lib/security/pam_gnome_keyring.so auto_start
+  gdm-autologin: login
+  # The login screen itself, as one of GDM's users: no password.
+  gdm-launch-environment: |
+    auth required /run/current-system/sw/lib/security/pam_succeed_if.so audit quiet_success user ingroup gdm
+    auth optional /run/current-system/sw/lib/security/pam_permit.so
+    account required /run/current-system/sw/lib/security/pam_succeed_if.so audit quiet_success user ingroup gdm
+    account sufficient /run/current-system/sw/lib/security/pam_unix.so
+    password required /run/current-system/sw/lib/security/pam_deny.so
+    session required /run/current-system/sw/lib/security/pam_succeed_if.so audit quiet_success user ingroup gdm
+    session required /run/current-system/sw/lib/security/pam_env.so conffile=/etc/pam/environment readenv=0
+    session optional /run/current-system/sw/lib/security/pam_systemd.so
+    session optional /run/current-system/sw/lib/security/pam_keyinit.so force revoke
+    session optional /run/current-system/sw/lib/security/pam_permit.so

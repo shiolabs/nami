@@ -1,0 +1,17 @@
+[connection]
+id=Corp
+type=wifi
+
+[wifi]
+ssid=Corp
+
+[wifi-security]
+key-mgmt=wpa-eap
+
+[802-1x]
+eap=tls;
+identity=alice
+ca-cert=/etc/ssl/corp-ca.pem
+client-cert=/home/alice/.certs/alice.pem
+private-key=/home/alice/.certs/alice.key
+private-key-password=not-a-real-one

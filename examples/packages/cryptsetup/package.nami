@@ -1,0 +1,12 @@
+# Encrypted disks (LUKS): `nami install-to --encrypt` makes one, and the
+# initrd unlocks it as the computer starts, asking for its password.
+# The device mapper's udev rules (lvm2 has them, as on Ubuntu): an
+# unlocked disk gets its /dev/disk links, and cryptsetup hears that
+# udev is done with it (without them, `cryptsetup open` waits forever).
+packages:
+  - lvm2
+boot:
+  initrd-programs: [bin/cryptsetup]
+  # cbc first: encrypted-keys (which dm-crypt needs) wants it as it loads,
+  # and the boot archive can't fetch modules by itself.
+  initrd-modules: [cbc, dm_crypt, xts, aesni_intel, aes_generic, algif_skcipher]

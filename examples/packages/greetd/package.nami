@@ -1,0 +1,23 @@
+# greetd, a small login manager: it starts a greeter (the login screen a
+# package that lists greetd brings, with its /etc/greetd/config.toml) and,
+# once someone's in, their desktop. On the first screen (tty1), as NixOS's
+# module sets it up.
+files:
+  /etc/systemd/system/greetd.service: |
+    [Unit]
+    Description=greetd, the login manager
+    Wants=systemd-user-sessions.service
+    After=systemd-user-sessions.service getty@tty1.service plymouth-quit.service
+    Conflicts=getty@tty1.service
+    [Service]
+    ExecStart=/run/current-system/sw/bin/greetd --config /etc/greetd/config.toml
+    EnvironmentFile=/etc/nami-os/environment
+    Restart=on-success
+    IgnoreSIGPIPE=no
+    SendSIGHUP=yes
+    TimeoutStopSec=30s
+    KeyringMode=shared
+    Type=idle
+login:
+  # Logging in, and the greeter's own session (no password: it's greetd's).
+  greetd: login

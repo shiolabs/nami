@@ -1,0 +1,5 @@
+# How to tell plymouth works, on a computer nami made (tests/usb.sh runs these).
+# (It writes how long the start took when it's quit.)
+"the boot splash: shown as the computer starts, quit by the login screen":
+  run: for i in $(seq 60); do [ -s /var/lib/plymouth/boot-duration ] && break; sleep 5; done; plymouth --ping && echo STILL-ON || echo DURATION=$(cat /var/lib/plymouth/boot-duration)
+  expect: "^DURATION=[0-9]"

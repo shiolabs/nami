@@ -1,0 +1,19 @@
+# How to tell flatpak works, on a computer nami made (tests/usb.sh and
+# tests/vm-quick.sh tests/namios run these). Installing an app from Flathub
+# is tests/lib/namios-flatpak-check.sh's (it downloads: NAMI_VM_FLATPAK=1).
+"Flatpak: there, with Flathub for the computer":
+  # (Flatpak takes it in as root, the first time something's installed for the computer.)
+  run: echo $(flatpak --version) $(sed -n 's|^Url=https://dl.flathub.org/repo/$|flathub|p' /etc/flatpak/remotes.d/flathub.flatpakrepo)
+  expect: "^Flatpak [0-9.]+ flathub"
+"Flatpak: installs for the computer go through its helper, admins without a password":
+  run: pkaction --action-id org.freedesktop.Flatpak.app-install >/dev/null && ls /run/current-system/sw/share/dbus-1/system-services/org.freedesktop.Flatpak.SystemHelper.service /etc/static/polkit-1/rules.d/30-flatpak.rules >/dev/null && getent passwd flatpak >/dev/null && echo HELPER
+  expect: "^HELPER"
+"Flatpak: the computer's fonts, where its apps see them":
+  run: find -L /run/current-system/sw/share/X11/fonts -name '*.ttf' -o -name '*.otf' | wc -l | sed 's/^/N=/'
+  expect: "N=[1-9][0-9]"
+"Flatpak: each person's apps update once a day":
+  run: systemctl --user is-enabled nami-flathub-update.timer
+  expect: "^enabled"
+"in the desktop: Flatpak's apps are in the menus (XDG_DATA_DIRS)":
+  run: tr '\0' '\n' < /proc/$(pgrep -u "$USER" -x nami-desktop | head -1)/environ | sed -n 's/^XDG_DATA_DIRS=//p' | tr ':' '\n' | grep -c 'flatpak/exports/share' | sed 's/^/N=/'
+  expect: "N=2"

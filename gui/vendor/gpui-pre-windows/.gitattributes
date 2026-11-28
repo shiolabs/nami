@@ -1,0 +1,5 @@
+# The compiled shaders as they are, and their HLSL byte for byte as hashed in
+# shaders/source.sha256 (whatever a Windows checkout does to line endings).
+*.dxbc binary
+*.hlsl text eol=lf
+shaders/source.sha256 text eol=lf

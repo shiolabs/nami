@@ -1,0 +1,13 @@
+# Typing Chinese, Japanese and Korean: IBus's engines for each, as Ubuntu's
+# Language Support installs them for a language: Intelligent Pinyin (and
+# Bopomofo) for Chinese, Mozc for Japanese, Hangul for Korean. Add one in
+# Settings, Keyboard, Input Sources (+, then the language); Super+Space
+# switches between them. The fonts are in every desktop (desktop).
+# Not in by default (Ubuntu adds a language's engine when you pick that
+# language; these are about 0.1 GB together): `- input-cjk` (next to namios)
+# in system.nami adds them.
+packages:
+  - ibus
+  - ibus-engines.libpinyin
+  - ibus-engines.mozc
+  - ibus-engines.hangul

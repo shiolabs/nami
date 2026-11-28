@@ -1,0 +1,51 @@
+{
+ "token": "rectangle",
+ "name": [
+  "Rectangle"
+ ],
+ "desc": "Move and resize windows using keyboard shortcuts or snap areas",
+ "homepage": "https://rectangleapp.com/",
+ "url": "https://github.com/rxhanson/Rectangle/releases/download/v2.0.5/Rectangle2.0.5.dmg",
+ "url_specs": {},
+ "version": "2.0.5",
+ "sha256": "4dec773a2f550d64147d88e07d987ce8119bdff045f1c6993a9a5eeb9f68496c",
+ "artifacts": [
+  {
+   "uninstall": [
+    {
+     "quit": "x"
+    }
+   ]
+  },
+  {
+   "app": [
+    "Rectangle.app"
+   ],
+   "target": "/Applications/Rectangle.app"
+  },
+  {
+   "zap": [
+    {
+     "trash": [
+      "~/Library/Preferences/x.plist"
+     ]
+    }
+   ]
+  }
+ ],
+ "caveats": null,
+ "depends_on": {
+  "macos": {
+   ">=": [
+    "14"
+   ]
+  }
+ },
+ "container": null,
+ "auto_updates": true,
+ "deprecated": false,
+ "deprecation_reason": null,
+ "disabled": false,
+ "disable_reason": null,
+ "variations": {}
+}

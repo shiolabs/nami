@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Settings
+Comment=Everything about this computer: how it looks and works, its apps, people and updates
+Exec=nami-gui
+Icon=nami-settings
+Terminal=false
+Categories=System;Settings;PackageManager;
+Keywords=preferences;control panel;system;apps;install;software;users;usb;drive;stick;nami;dock;display;sound;mouse;keyboard;updates;backup;
+# namiOS's Settings; on other desktops the window is nami (nami.desktop), next to their own Settings.
+OnlyShowIn=niri;

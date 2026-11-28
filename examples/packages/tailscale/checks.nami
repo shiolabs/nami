@@ -1,0 +1,19 @@
+# How to tell tailscale works, on a computer nami made (tests/usb.sh runs these).
+"Tailscale: tailscaled runs":
+  run: systemctl is-active tailscaled
+  expect: "^active"
+"Tailscale: logged in, or waiting for a login":
+  run: tailscale status --json --peers=false | grep BackendState
+  expect: '"(NeedsLogin|Running)"'
+"Tailscale: its tunnel device":
+  run: echo $(ip -o link show tailscale0 | cut -d' ' -f2) $(test -c /dev/net/tun && echo /dev/net/tun)
+  expect: "^tailscale0: /dev/net/tun$"
+"Tailscale: its login is kept in /var/lib/tailscale":
+  run: stat -c '%a %U %n' /var/lib/tailscale
+  expect: "^700 root /var/lib/tailscale"
+"Tailscale: DNS through systemd-resolved, as on Ubuntu (MagicDNS)":
+  run: 'systemctl is-active systemd-resolved; journalctl -b -u tailscaled --no-pager | grep -o ''dns: using "[a-z-]*" mode'' | tail -1'
+  expect: 'dns: using "systemd-resolved" mode'
+"Tailscale: other names still resolve":
+  run: resolvectl query cache.nixos.org
+  expect: "cache.nixos.org: [0-9a-f]"

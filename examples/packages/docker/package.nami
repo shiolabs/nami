@@ -1,0 +1,61 @@
+# Docker, as on Ubuntu after `apt install docker.io docker-compose-v2
+# docker-buildx` and `usermod -aG docker you`: `- docker` in
+# system.nami. `docker compose` and `docker buildx` come with it (and your
+# own CLI plugins, in ~/.docker/cli-plugins). Who runs docker without
+# sudo, and Docker's settings, are plain keys of system.nami. The admins
+# are in the docker group already (below: they're root's equals anyway, as
+# the group makes whoever's in it); someone else, by name:
+#
+#   users:
+#     anna: { groups: [docker] }        # the docker group
+#   files:
+#     /etc/docker/daemon.json:
+#       content:                       # daemon.json's keys, as JSON
+#         registry-mirrors: [https://mirror.example.org]
+#         log-driver: local
+#         log-opts: { max-size: 10m, max-file: "3" }   # (text: quote numbers)
+#         data-root: /home/docker      # images, containers, volumes
+#       restart: docker.service        # `nami apply` restarts dockerd when it changes
+#
+# Whoever is in the docker group can do as root does on the computer,
+# through dockerd, as on Ubuntu; anyone else: `sudo docker`. When dockerd
+# restarts, containers with a restart policy start again; volumes stay.
+#
+# Not here: rootless Docker (dockerd as you, `dockerd-rootless`, its own
+# user service); the user IDs it needs (/etc/subuid) and setuid
+# newuidmap are on every nami computer. nami adds no firewall (Ubuntu has none on
+# either): a published port (`-p 8080:80`) is open to the network, through
+# Docker's own rules, as on Ubuntu.
+#
+# Docker's daemon on a computer nami made, whenever the docker package is
+# on it (as `apt install docker.io` starts it on Ubuntu): dockerd, through
+# its socket (/run/docker.sock, root's and the docker group's) and with the
+# computer, so containers with a restart policy come back after a
+# restart. Images, containers and volumes are in /var/lib/docker, kept
+# through updates. nixpkgs' package brings Docker's own docker.socket and
+# docker.service, dockerd with iptables, nftables underneath, on its PATH,
+# and a docker command that finds compose and buildx. One difference from
+# Ubuntu: dockerd runs its own containerd (the one nixpkgs bundles, as
+# NixOS runs it), not a containerd.service next to it, so there's no
+# `ctr`.
+services:
+  - docker.socket
+  - docker.service
+# The admins run docker without sudo (the first person on a computer for
+# anyone too, set up at its first start, whom no file names yet).
+groups:
+  docker: admins
+files:
+  # The socket's group: whoever's in it runs docker without sudo.
+  /etc/sysusers.d/docker.conf: |
+    g docker -
+  # The storage driver's file system, and the bridge's packets through
+  # the firewall (dockerd loads them itself too; here they're ready).
+  /etc/modules-load.d/docker.conf: |
+    overlay
+    br_netfilter
+  /etc/systemd/system/docker.service.d/nami.conf: |
+    [Service]
+    # Its own containerd: no --containerd= (there's no containerd.service).
+    ExecStart=
+    ExecStart=/run/current-system/sw/bin/dockerd -H fd://

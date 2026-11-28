@@ -1,0 +1,8 @@
+# polkit: who may do what (Settings asks for an admin's password through it).
+setuid: [bin/pkexec, lib/polkit-1/polkit-agent-helper-1]
+login:
+  polkit-1: login
+files:
+  # Admins are who it asks for.
+  /etc/polkit-1/rules.d/10-nami.rules: |
+    polkit.addAdminRule(function(action, subject) { return ["unix-group:wheel"]; });

@@ -1,0 +1,4 @@
+# The XanMod kernel, its newest line (kernel-xanmod is its long-term one).
+# Drivers built for a kernel (nvidia's) come built for this one.
+boot:
+  kernel: linux_xanmod_latest

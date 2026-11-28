@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- nami.app's icon: nami's mark (gui/nami.svg) on a Mac's icon grid, its body 824 of 1024
+       with the room macOS's icons leave round theirs, and a soft shadow under it. Made into
+       nami.icns by make-icns.sh. -->
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <g transform="translate(41.143 41.143) scale(7.3571)">
+    <rect x="8" y="8" width="112" height="112" rx="26" fill="#33394a" filter="url(#shadow)"/>
+    <rect x="30.4" y="30.4" width="67.2" height="67.2" rx="17.3" fill="none" stroke="#f4f4f5" stroke-width="7.5"/>
+    <rect x="60.3" y="60.3" width="23.3" height="23.3" rx="6.5" fill="#f4f4f5"/>
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+# The XanMod kernel, its long-term line: Linux tuned for desktops and
+# games, on the same version as nixpkgs' default. Drivers built for a
+# kernel (nvidia's) come built for this one. kernel-xanmod-latest is its
+# newest line.
+boot:
+  kernel: linux_xanmod

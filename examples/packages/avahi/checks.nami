@@ -1,0 +1,4 @@
+# How to tell avahi works, on a computer nami made (tests/usb.sh runs these).
+"network printers and scanners: avahi runs":
+  run: systemctl is-active avahi-daemon
+  expect: "^active"

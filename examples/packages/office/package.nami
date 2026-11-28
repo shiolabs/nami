@@ -1,0 +1,6 @@
+# Office and email: documents, spreadsheets, slides, PDFs and mail.
+# Others: onlyoffice-desktopeditors, obsidian, joplin-desktop, xournalpp.
+packages:
+  - libreoffice
+  - thunderbird
+  - papers           # PDFs

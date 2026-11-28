@@ -1,0 +1,9 @@
+# The screen reader's voice: Speech Dispatcher with eSpeak NG's voices, as
+# Ubuntu has them (speech-dispatcher), so Orca (gnome) speaks. It
+# isn't in by default: eSpeak NG brings MBROLA's voices, about 0.7 GB on
+# the USB drive. `- speech` (next to namios) in system.nami adds it.
+packages:
+  - speechd
+# Each person's own, started when Orca (or anything else) first speaks.
+services:
+  - speech-dispatcher.socket: { per-person: true }

@@ -1,0 +1,4 @@
+# How to tell greetd works, on a computer nami made.
+"the login screen":
+  run: systemctl is-active display-manager
+  expect: "^active"

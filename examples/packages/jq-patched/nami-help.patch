@@ -1,0 +1,10 @@
+--- a/src/main.c
++++ b/src/main.c
+@@ -54,6 +54,7 @@
+ 
+   int ret = fprintf(f,
+     "jq - commandline JSON processor [version %s]\n"
++    "\nPatched by nami (extends: jq).\n"
+     "\nUsage:\tjq [options] <jq filter> [file...]\n"
+     "\tjq [options] --args <jq filter> [strings...]\n"
+     "\tjq [options] --jsonargs <jq filter> [JSON_TEXTS...]\n\n"

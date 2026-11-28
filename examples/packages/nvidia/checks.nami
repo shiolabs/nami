@@ -1,0 +1,19 @@
+# How to tell nvidia works, on a computer nami made (tests/usb.sh runs these).
+"NVIDIA: the modules are built for the kernel that runs":
+  run: '[ "$(modinfo -F vermagic nvidia | cut -d" " -f1)" = "$(uname -r)" ] && modinfo -F vermagic nvidia_drm && echo SAME'
+  expect: "SAME"
+"NVIDIA: modprobe knows what needs what (depmod)":
+  run: modprobe -D nvidia_drm 2>&1 | tr '\n' ' '
+  expect: "nvidia\\.ko.*nvidia-modeset\\.ko.*nvidia-drm\\.ko"
+"NVIDIA: nouveau is kept away, and the display gets KMS":
+  run: modprobe -c | grep -E '^(blacklist nouveau|options nvidia_drm)' | tr '\n' ' '
+  expect: "blacklist nouveau options nvidia_drm modeset=1 fbdev=1"
+"NVIDIA: the card's firmware (GSP)":
+  run: ls /run/current-system/firmware/lib/firmware/nvidia/[0-9]*/
+  expect: "gsp_ga10x\\.bin\\.zst"
+"NVIDIA: the libraries, next to mesa's":
+  run: ls /run/opengl-driver/share/glvnd/egl_vendor.d /run/opengl-driver/lib/gbm /run/opengl-driver/share/vulkan/icd.d /etc/egl/egl_external_platform.d | grep -cxE '10_nvidia.json|50_mesa.json|nvidia-drm_gbm.so|nvidia_icd.json|10_nvidia_wayland.json|15_nvidia_gbm.json' | sed 's/^/N=/'
+  expect: "N=6"
+"NVIDIA: nvidia-smi runs":
+  run: nvidia-smi 2>&1 | head -3
+  expect: "NVIDIA-SMI|Driver Version|NVIDIA driver"

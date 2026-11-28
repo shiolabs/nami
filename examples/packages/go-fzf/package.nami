@@ -1,0 +1,7 @@
+# fzf (https://github.com/junegunn/fzf)
+# By `nami recipe from-url https://github.com/junegunn/fzf --version 0.75.0`: a Go project; its modules come as its go.sum pins them.
+# Its sha256 is in nami.lock, next to this file. Check it, then: nami build ./go-fzf
+name: fzf
+version: 0.75.0
+source:
+  url: https://github.com/junegunn/fzf/archive/refs/tags/v0.75.0.tar.gz

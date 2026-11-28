@@ -1,0 +1,2 @@
+# PAM: the password check the screen lock and others use as you.
+setuid: [bin/unix_chkpwd]

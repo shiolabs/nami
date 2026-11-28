@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(zcat-lite C)
+find_package(ZLIB REQUIRED)
+set(GREETING "world" CACHE STRING "who to greet")
+add_executable(zcat-lite main.c)
+target_compile_definitions(zcat-lite PRIVATE GREETING="${GREETING}")
+target_link_libraries(zcat-lite ZLIB::ZLIB)
+install(TARGETS zcat-lite)

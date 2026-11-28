@@ -1,0 +1,51 @@
+{
+ "token": "iterm2",
+ "name": [
+  "iTerm2"
+ ],
+ "desc": "Terminal emulator as alternative to Apple's Terminal app",
+ "homepage": "https://iterm2.com/",
+ "url": "https://iterm2.com/downloads/stable/iTerm2-3_7_9.zip",
+ "url_specs": {},
+ "version": "3.7.9",
+ "sha256": "beb96a1089b061c80e030101947aee13d54ba5e4058ad00b82e79633be29d3d2",
+ "artifacts": [
+  {
+   "uninstall": [
+    {
+     "quit": "x"
+    }
+   ]
+  },
+  {
+   "app": [
+    "iTerm.app"
+   ],
+   "target": "/Applications/iTerm.app"
+  },
+  {
+   "zap": [
+    {
+     "trash": [
+      "~/Library/Preferences/x.plist"
+     ]
+    }
+   ]
+  }
+ ],
+ "caveats": null,
+ "depends_on": {
+  "macos": {
+   ">=": [
+    "13"
+   ]
+  }
+ },
+ "container": null,
+ "auto_updates": true,
+ "deprecated": false,
+ "deprecation_reason": null,
+ "disabled": false,
+ "disable_reason": null,
+ "variations": {}
+}

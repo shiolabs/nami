@@ -1,0 +1,3 @@
+# thermald: keeping cool (Intel laptops).
+services:
+  - thermald.service

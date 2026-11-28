@@ -1,0 +1,40 @@
+# Swap, as every Ubuntu has (Ubuntu's is a file on the disk): here it's
+# compressed memory (zram), as Fedora's and ChromeOS's, which suits a USB drive
+# best (nothing written to it) and is quicker than a disk. Half the memory,
+# at most 4 GB (zram-generator's default); what's swapped takes about a
+# third of that once compressed. base lists it.
+services:
+  - nami-zram.service
+files:
+  /etc/nami-os/zram:
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      PATH=/run/current-system/sw/bin
+      if [ "$1" = stop ]; then
+        swapoff /dev/zram0
+        zramctl --reset /dev/zram0
+        exit 0
+      fi
+      modprobe zram || exit 1
+      kb=$(awk '/^MemTotal:/ { m = int($2 / 2); print (m > 4194304 ? 4194304 : m) }' /proc/meminfo)
+      # (As the computer starts, udev may still have it open for a moment: "busy".)
+      for _ in 1 2 3 4 5; do
+        zramctl /dev/zram0 --algorithm zstd --size "${kb}K" && break
+        sleep 1
+      done
+      mkswap -q /dev/zram0 && swapon -p 100 /dev/zram0
+  /etc/systemd/system/nami-zram.service: |
+    [Unit]
+    Description=Swap in compressed memory (zram)
+    DefaultDependencies=no
+    Before=swap.target shutdown.target
+    Conflicts=shutdown.target
+    ConditionVirtualization=!container
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/etc/nami-os/zram start
+    ExecStop=/etc/nami-os/zram stop
+    [Install]
+    WantedBy=swap.target

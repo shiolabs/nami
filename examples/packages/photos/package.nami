@@ -1,0 +1,7 @@
+# Photos and drawing: edit photos, paint, and draw shapes and logos.
+# Others: digikam, rawtherapee, scribus, pinta.
+packages:
+  - gimp
+  - krita
+  - inkscape
+  - darktable        # raw photos

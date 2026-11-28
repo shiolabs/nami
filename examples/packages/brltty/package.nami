@@ -1,0 +1,12 @@
+# Braille displays, as Ubuntu has them (brltty): plug one in (USB, or
+# Bluetooth) and udev starts BRLTTY for it, which shows the text console
+# on it and gives it to Orca on the desktop (BrlAPI). Nothing runs
+# without a braille display. desktop lists this.
+packages:
+  - brltty
+files:
+  # Only the displays brltty knows by name: its generic
+  # list also takes USB serial adapters (Arduino boards, FTDI and CH341
+  # cables) that aren't braille displays at all.
+  /etc/udev/rules.d/90-brltty-usb-generic.rules: |
+    # Left out (90-brltty-usb-customized.rules has the displays).

@@ -1,0 +1,3 @@
+# switcheroo-control: laptops with two GPUs: which runs an app.
+services:
+  - switcheroo-control.service

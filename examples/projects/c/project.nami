@@ -1,0 +1,8 @@
+# C and C++, with a compiler, make, CMake and pkg-config. The tools this project needs; `nami shell` to use them.
+packages:
+  - gcc
+  - gnumake
+  - cmake
+  - pkg-config
+tasks:
+  build: cmake -B build && cmake --build build

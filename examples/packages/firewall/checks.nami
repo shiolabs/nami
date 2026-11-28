@@ -1,0 +1,7 @@
+# How to tell the firewall works, on a computer nami made (tests/usb.sh and nami doctor run these).
+"firewall: on, its rules in place":
+  run: systemctl is-active firewall
+  expect: "^active"
+"firewall: what it lets in, as it reads it, is all understood":
+  run: sh /etc/firewall/firewall.sh print 2>&1 >/dev/null | grep -c "not understood" | sed "s/^/wrong=/"
+  expect: "^wrong=0$"

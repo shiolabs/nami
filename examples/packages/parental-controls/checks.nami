@@ -1,0 +1,13 @@
+# How to tell parental controls work, on a computer nami made (tests/usb.sh runs these).
+"parental controls: everyone's given to AccountsService at the start":
+  run: systemctl is-active nami-parental-controls
+  expect: "^active"
+"parental controls: AccountsService keeps malcontent's part":
+  run: u=$(busctl --system call org.freedesktop.Accounts /org/freedesktop/Accounts org.freedesktop.Accounts FindUserByName s "$(id -un)" | cut -d'"' -f2); busctl --system introspect org.freedesktop.Accounts "$u" com.endlessm.ParentalControls.SessionLimits | grep -c DailySchedule
+  expect: "^1"
+"parental controls: no limits for someone who isn't a child":
+  run: u=$(busctl --system call org.freedesktop.Accounts /org/freedesktop/Accounts org.freedesktop.Accounts FindUserByName s "$(id -un)" | cut -d'"' -f2); busctl --system get-property org.freedesktop.Accounts "$u" com.endlessm.ParentalControls.SessionLimits LimitType
+  expect: "^u 0"
+"in the desktop: parental controls: GNOME Shell reads the limits (malcontent's library is loaded in it)":
+  run: p=$(pgrep -u "$(id -un)" -f '/bin/[g]nome-shell( |$)' | head -1); if [ -z "$p" ]; then echo "NOT GNOME"; elif grep -q libmalcontent /proc/$p/maps; then echo FOUND; fi
+  expect: "^(FOUND|NOT GNOME)"

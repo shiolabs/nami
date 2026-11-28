@@ -1,0 +1,7 @@
+# Go with its language server. The tools this project needs; `nami shell` to use them.
+packages:
+  - go
+  - gopls
+tasks:
+  build: go build ./...
+  test: go test ./...

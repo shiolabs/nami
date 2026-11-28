@@ -1,0 +1,310 @@
+Package: base-files
+Status: install ok installed
+Priority: required
+Section: admin
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: bash
+Status: install ok installed
+Priority: required
+Section: shells
+Architecture: amd64
+Version: 1.0-1
+Depends: base-files (>= 2.1.12)
+Description: a package
+ .
+ more text
+
+Package: coreutils
+Status: install ok installed
+Priority: required
+Section: utils
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: apt
+Status: install ok installed
+Priority: important
+Section: admin
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: ubuntu-minimal
+Status: install ok installed
+Priority: important
+Section: metapackages
+Architecture: amd64
+Version: 1.0-1
+Depends: bash, coreutils
+Description: a package
+ .
+ more text
+
+Package: ubuntu-desktop-minimal
+Status: install ok installed
+Priority: optional
+Section: metapackages
+Architecture: amd64
+Version: 1.0-1
+Depends: gnome-shell, nautilus | thunar
+Recommends: libnotify-bin
+Description: a package
+ .
+ more text
+
+Package: gnome-shell
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Depends: libgtk-4-1t64
+Description: a package
+ .
+ more text
+
+Package: nautilus
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: libnotify-bin
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: libgtk-4-1t64
+Status: install ok installed
+Priority: optional
+Section: libs
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: btop
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: git
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: code
+Status: install ok installed
+Priority: optional
+Section: editors
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: google-chrome-stable
+Status: install ok installed
+Priority: optional
+Section: web
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: fonts-firacode
+Status: install ok installed
+Priority: optional
+Section: fonts
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: qemu-system-x86
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: qemu-system-gui
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: ripgrep
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: fd-find
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: photo-editor-pro
+Status: install ok installed
+Priority: optional
+Section: graphics
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: search-tool
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: libssl-dev
+Status: install ok installed
+Priority: optional
+Section: libdevel
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: libnss3
+Status: install ok installed
+Priority: optional
+Section: libs
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: linux-generic
+Status: install ok installed
+Priority: optional
+Section: kernel
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: language-pack-da
+Status: install ok installed
+Priority: optional
+Section: translations
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: acme-vpn
+Status: install ok installed
+Priority: optional
+Section: net
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: snapd
+Status: install ok installed
+Priority: optional
+Section: misc
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: openssh-server
+Status: install ok installed
+Priority: optional
+Section: net
+Architecture: amd64
+Version: 1.0-1
+Description: a package
+ .
+ more text
+
+Package: old-removed
+Status: deinstall ok config-files
+Priority: optional
+Version: 1
+
+Package: docker.io
+Status: install ok installed
+Priority: optional
+Section: admin
+Architecture: amd64
+Version: 1.0-1
+
+Package: docker-compose-v2
+Status: install ok installed
+Priority: optional
+Section: admin
+Architecture: amd64
+Version: 1.0-1
+
+Package: containerd
+Status: install ok installed
+Priority: optional
+Section: admin
+Architecture: amd64
+Version: 1.0-1

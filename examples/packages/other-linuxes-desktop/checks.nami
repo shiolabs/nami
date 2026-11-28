@@ -1,0 +1,19 @@
+# How to tell other-linuxes-desktop works, on a computer nami made (tests/usb.sh runs these).
+"downloaded apps find their libraries: GTK, X11, Wayland, OpenGL, Vulkan, sound, NSS, SDL, FUSE 2":
+  run: (cd /run/current-system/sw/share/nix-ld/lib && ls libgtk-3.so.0 libX11.so.6 libxcb.so.1 libwayland-client.so.0 libGL.so.1 libEGL.so.1 libvulkan.so.1 libgbm.so.1 libasound.so.2 libpulse.so.0 libnss3.so libsecret-1.so.0 libSDL2-2.0.so.0 libfuse.so.2 >/dev/null && echo SET-OK)
+  expect: "^SET-OK$"
+"AppImages of the older kind mount themselves (fusermount, setuid)":
+  run: stat -c %a /run/wrappers/bin/fusermount /run/wrappers/bin/fusermount3 | tr '\n' ' '
+  expect: "^4755 4755 $"
+"opening a downloaded program in Files starts it (nami start)":
+  run: XDG_DATA_DIRS=/etc/nami-os/share:/run/current-system/sw/share gio mime application/x-pie-executable | head -1 | grep -c "nami-start.desktop" | sed "s/^/N=/"
+  expect: "^N=1$"
+"opening a .deb, an .rpm or an AppImage in Files shows it in Settings, to install (nami open-package)":
+  run: for t in application/vnd.debian.binary-package application/x-rpm application/vnd.appimage; do XDG_DATA_DIRS=/etc/nami-os/share:/run/current-system/sw/share gio mime $t | head -1; done | grep -c "nami-install-app.desktop" | sed "s/^/N=/"
+  expect: "^N=3$"
+"what's in an AppImage is read without starting it (unsquashfs)":
+  run: command -v unsquashfs >/dev/null && echo HAVE
+  expect: "^HAVE$"
+"opening a nami bundle in Files shows it in Settings, to install (nami open-package)":
+  run: XDG_DATA_DIRS=/etc/nami-os/share:/run/current-system/sw/share gio mime application/x-tray-bundle | head -1 | grep -c "nami-install-app.desktop" | sed "s/^/N=/"
+  expect: "^N=1$"

@@ -1,0 +1,29 @@
+# Secure Boot, which most PCs come with on, as Ubuntu does it: the
+# firmware starts shim (signed by Microsoft; Debian's), shim starts
+# systemd-boot signed with the computer's own key, and systemd-boot starts
+# kernels signed with it too. On the first start with Secure Boot on, the
+# firmware doesn't know the key yet: shim's MokManager comes up, and
+# "Enroll key from disk" takes nami-key.cer off the USB drive (see the README).
+# The key stays on the computer, root's only, to sign the kernels updates
+# bring; `nami install-to` takes it along. base lists it.
+packages:
+  # Signs the kernels updates bring.
+  - sbsigntool
+  # Secure Boot's state, and its keys: mokutil --sb-state.
+  - mokutil
+# shim and MokManager, from Debian 13's packages (by Microsoft's and
+# Debian's keys). The first address that answers; snapshot.debian.org
+# keeps every version for good.
+secure-boot:
+  shim:
+    from:
+      - https://deb.debian.org/debian/pool/main/s/shim-signed/shim-signed_1.51~1+deb13u1+16.1-2~deb13u1_amd64.deb
+      - https://snapshot.debian.org/archive/debian/20260627T023159Z/pool/main/s/shim-signed/shim-signed_1.51~1+deb13u1+16.1-2~deb13u1_amd64.deb
+    sha256: 3c802fa303c0e6bf126adee74028d1042e3120360d159c2c05181dc9b2f61005
+    file: usr/lib/shim/shimx64.efi.signed
+  mokmanager:
+    from:
+      - https://deb.debian.org/debian/pool/main/s/shim-helpers-amd64-signed/shim-helpers-amd64-signed_1+16.1+2~deb13u1_amd64.deb
+      - https://snapshot.debian.org/archive/debian/20260627T023159Z/pool/main/s/shim-helpers-amd64-signed/shim-helpers-amd64-signed_1+16.1+2~deb13u1_amd64.deb
+    sha256: 7e950d75d5a40ecc0a99f727452ce35780b47a04d9a2cc3b1ff7c2bb316c033e
+    file: usr/lib/shim/mmx64.efi.signed

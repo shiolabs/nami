@@ -1,0 +1,4 @@
+# How to tell modemmanager works, on a computer nami made (tests/usb.sh runs these).
+"mobile broadband (ModemManager)":
+  run: mmcli -L 2>&1
+  expect: "modems"

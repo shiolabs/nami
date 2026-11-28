@@ -1,0 +1,6 @@
+# JavaScript and TypeScript with Node.js. The tools this project needs; `nami shell` to use them.
+packages:
+  - nodejs
+tasks:
+  dev: npm run dev
+  test: npm test

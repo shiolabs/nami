@@ -1,0 +1,31 @@
+# Copy this to .github/workflows/release.yml in your project. Push a tag
+# like v1.2.0 and your program is attached to that tag's release (made if
+# there isn't one yet) as one file that runs on any x86_64 Linux, with its
+# .sha256.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # to upload to the release
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the tags, for the version when your files don't say one
+      - uses: shiolabs/nami/action@main
+        id: bundle
+        # All optional:
+        # with:
+        #   path: .              # the project's folder
+        #   appimage: true       # also an AppImage
+        #   thin: true           # also a small file that downloads the rest on first start
+        #   args: --program myapp --exclude python3
+      # Optional: run it on Ubuntu, Debian, Fedora, Arch, openSUSE and Mint,
+      # each in a clean container (podman is on GitHub's Ubuntu runners).
+      # - run: nami bundle --test ${{ steps.bundle.outputs.bundle }}

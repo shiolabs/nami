@@ -1,0 +1,4 @@
+# How to tell bolt works, on a computer nami made (tests/usb.sh runs these).
+"Thunderbolt: bolt answers":
+  run: timeout 30 busctl --system get-property org.freedesktop.bolt /org/freedesktop/bolt org.freedesktop.bolt1.Manager Version
+  expect: "^u [0-9]"

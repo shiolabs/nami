@@ -1,0 +1,7 @@
+.{
+    .name = .zig_hello,
+    .version = "0.2.0",
+    .fingerprint = 0xfdb7fa732278c6b,
+    .minimum_zig_version = "0.15.0",
+    .paths = .{ "build.zig", "build.zig.zon", "src" },
+}

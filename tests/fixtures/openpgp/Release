@@ -1,0 +1,5 @@
+Origin: test
+Suite: stable
+SHA256:
+ abc 12 main/binary-amd64/Packages
+- dashed line   

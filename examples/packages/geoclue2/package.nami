@@ -1,0 +1,6 @@
+# Where the computer is (for the time zone and maps), from Wi-Fi networks.
+files:
+  /etc/sysusers.d/geoclue.conf: |
+    u geoclue - "geoclue" /var/lib/geoclue
+  /etc/tmpfiles.d/geoclue.conf: |
+    d /var/lib/geoclue 0755 geoclue geoclue -

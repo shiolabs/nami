@@ -1,0 +1,45 @@
+#!/bin/sh
+# `docker`, for the tests on machines without it: the real docker when it's
+# installed, else rootless podman from nixpkgs with the little config podman
+# needs when the NixOS podman module isn't enabled (policy, registries,
+# storage under ~/.local/share). Same command line either way.
+# Put this directory first on PATH: `PATH=$PWD/tests/lib:$PATH tests/x.sh`.
+self=$(dirname "$(readlink -f "$0")")
+# Every container a test starts is a test computer: nami and its installer
+# there add ?via=test, and namios.dev counts them apart (site/worker.js).
+if [ "${1:-}" = run ]; then shift; set -- run -e NAMI_TEST=1 "$@"; fi
+for d in $(echo "$PATH" | tr : ' '); do
+  [ "$d" = "$self" ] && continue
+  [ -x "$d/docker" ] && exec "$d/docker" "$@"
+done
+base=${XDG_CONFIG_HOME:-$HOME/.config}/nami-tests
+# (A computer that ran these before keeps its images where they were.)
+old=${XDG_CONFIG_HOME:-$HOME/.config}/tr''ay-tests
+[ -e "$base" ] || [ ! -d "$old" ] || base=$old
+conf=$base/containers
+mkdir -p "$conf"
+[ -e "$conf/policy.json" ] || echo '{"default":[{"type":"insecureAcceptAnything"}]}' > "$conf/policy.json"
+[ -e "$conf/registries.conf" ] || printf 'unqualified-search-registries = ["docker.io"]\nshort-name-mode = "permissive"\n' > "$conf/registries.conf"
+# Rootless podman reads ~/.config/containers whatever XDG says: give it a
+# home of its own, so the user's ~/.config stays untouched. Images and
+# containers live there too (~/.config/nami-tests/home/.local/share).
+export HOME="$base/home" XDG_CONFIG_HOME="$base/home/.config" XDG_DATA_HOME="$base/home/.local/share"
+mkdir -p "$XDG_CONFIG_HOME" && ln -sfn "$conf" "$XDG_CONFIG_HOME/containers"
+podman=$(command -v podman) || podman=$(nix build --no-link --print-out-paths 'nixpkgs#podman^out' 2>/dev/null)/bin/podman
+# newuidmap/newgidmap are setuid wrappers on NixOS; podman finds them on PATH.
+export PATH="/run/wrappers/bin:$PATH"
+# `-u <you>`, as for docker: rootless, the container's root is you, and its
+# user of your number is someone else, who can't write to what you mount.
+if [ "${1:-}" = run ]; then
+  n=$#
+  while [ "$n" -gt 0 ]; do
+    a=$1; shift; n=$((n - 1))
+    if [ "$a" = -u ] && [ "$n" -gt 0 ]; then
+      case $1 in "$(id -u)":*) shift; n=$((n - 1)); continue ;; esac
+    fi
+    set -- "$@" "$a"
+  done
+fi
+# docker's is fine with a volume that's there; podman's needs telling.
+[ "${1:-} ${2:-}" != "volume create" ] || { shift 2; set -- volume create --ignore "$@"; }
+exec "$podman" "$@"

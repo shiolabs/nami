@@ -1,0 +1,4 @@
+# How to tell sane-backends works, on a computer nami made (tests/usb.sh runs these).
+"scanning: SANE":
+  run: timeout 60 scanimage -L 2>&1 | head -3
+  expect: "scanners were identified|device"

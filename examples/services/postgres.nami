@@ -1,0 +1,23 @@
+# PostgreSQL for a project: copy this file to its services/ folder and list
+# it under services: in its project.nami, `- ./services/postgres.nami`
+# (`- ./services/postgres.nami: { version: 16 }` for a version). Its data and
+# socket are in the project's .nami/postgres ({sockets}: a short folder elsewhere
+# when that path is too long for a socket). The database is named after
+# the project's folder; anyone on this computer may log in as postgres,
+# without a password (it only listens on this computer).
+about: PostgreSQL, the database
+packages: [postgresql]
+port: 5432
+init: |
+  initdb -D {state}/data -U postgres --auth=trust --encoding=UTF8 --no-locale >/dev/null
+  echo 'CREATE DATABASE "{project}"' | postgres --single -D {state}/data postgres >/dev/null
+run: postgres -D {state}/data -k {sockets} -p {port} -c listen_addresses=localhost
+ready: pg_isready -q -h {sockets} -p {port}
+stop-signal: INT          # a fast shutdown, even with clients connected
+as-root: false              # it refuses to: as root, nami runs it as nobody
+exports:
+  PGHOST: "{sockets}"       # psql and libpq use the socket
+  PGPORT: "{port}"
+  PGUSER: postgres
+  PGDATABASE: "{project}"
+  DATABASE_URL: postgresql://postgres@localhost:{port}/{project}

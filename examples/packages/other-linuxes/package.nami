@@ -1,0 +1,119 @@
+# Programs built for other distributions: a prebuilt program from GitHub's
+# releases, npm's and pip's prebuilt ones, rustup's tools, a game's. They
+# ask for their loader at /lib64/ld-linux-x86-64.so.2 and their libraries at
+# /usr/lib, which namiOS doesn't have. nix-ld is that loader here: it starts
+# them with the system's glibc and finds their libraries in the set below
+# (and other-linuxes-desktop's), joined in
+# /run/current-system/sw/share/nix-ld/lib. Only those programs look there:
+# the system's own have their libraries already, and don't see these.
+# A library missing from the set is said by name, with the package that
+# has it (`nami libraries <program>`, and after one fails in a terminal);
+# `nami libraries --add <program>` adds it to that person's own set.
+# base lists it; leave it out with `without: [other-linuxes]`.
+packages:
+  - nix-ld
+# What they link to most, on a computer without a desktop too: C++'s and
+# GCC's runtime, compression, TLS and the network, text and data formats,
+# the system's own (systemd's, D-Bus', PAM's), and FUSE.
+libraries:
+  - libgcc
+  - zlib
+  - zstd
+  - bzip2
+  - xz
+  - lz4
+  - brotli
+  - libarchive
+  - openssl
+  - curl
+  - nghttp2
+  - libidn2
+  - libpsl
+  - libssh
+  - libssh2
+  - krb5
+  - keyutils
+  - e2fsprogs
+  - openldap
+  - cyrus_sasl
+  - gnutls
+  - nettle
+  - p11-kit
+  - libtasn1
+  - libgcrypt
+  - libgpg-error
+  - icu
+  - libxml2
+  - libxslt
+  - expat
+  - pcre2
+  - glib
+  - sqlite
+  - libffi
+  - gmp
+  - readline
+  - ncurses
+  # libtinfo.so.5 and libncurses.so.5, which older programs want.
+  - ncurses5
+  # libcrypt.so.1, which glibc had.
+  - libxcrypt-legacy
+  - libxcrypt
+  - util-linux
+  - attr
+  - acl
+  - libcap
+  - libsodium
+  - systemdLibs
+  - dbus
+  - libuv
+  - libunwind
+  - elfutils
+  - libbsd
+  - libmd
+  - libusb1
+  - libnsl
+  - libtirpc
+  - numactl
+  - linux-pam
+  - libevent
+  - fuse3
+# Where they look, in order: the set, the graphics driver's own libraries
+# (CUDA's libcuda, for pip's PyTorch), and the person's own set.
+env:
+  NIX_LD_LIBRARY_PATH: /run/current-system/sw/share/nix-ld/lib:/run/opengl-driver/lib:$HOME/.local/state/nami/libraries
+files:
+  # Commands of apps installed from downloads (`nami install ./foo.deb`) go in
+  # ~/.local/bin, as on other distributions: on PATH, after the system's own.
+  /etc/profile.d/local-bin.sh: |
+    case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) PATH="$PATH:$HOME/.local/bin" ;; esac
+  # A program for another distribution that just failed to start in a terminal
+  # (127, the loader's "error while loading shared libraries"): which
+  # library it lacks, in words, and the package with it.
+  /etc/bashrc.d/other-linuxes.sh: |
+    _nami_lacks() {
+      local s=$? w f
+      if [ "$s" = 127 ]; then
+        w=$(HISTTIMEFORMAT= history 1 | sed 's/^ *[0-9]* *//')
+        w=${w%% *}; w=${w/#\~/$HOME}
+        case $w in */*) f=$w ;; *) f=$(type -P -- "$w" 2>/dev/null) ;; esac
+        [ -n "$f" ] && [ -f "$f" ] && /nix/var/nami/bin/nami libraries --after-failure -- "$f"
+      fi
+      return $s
+    }
+    PROMPT_COMMAND="_nami_lacks${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+  /etc/zshrc.d/other-linuxes.zsh: |
+    _nami_lacks_cmd=
+    _nami_lacks_preexec() { _nami_lacks_cmd=$1 }
+    _nami_lacks_precmd() {
+      local s=$? w f
+      local -a words
+      if [[ $s == 127 && -n $_nami_lacks_cmd ]]; then
+        words=(${(z)_nami_lacks_cmd}); w=${(Q)words[1]}; w=${w/#\~/$HOME}
+        if [[ $w == */* ]]; then f=$w; else f=$(whence -p -- $w 2>/dev/null); fi
+        [[ -n $f && -f $f ]] && /nix/var/nami/bin/nami libraries --after-failure -- $f
+      fi
+      _nami_lacks_cmd=
+      return $s
+    }
+    preexec_functions+=(_nami_lacks_preexec)
+    precmd_functions=(_nami_lacks_precmd $precmd_functions)

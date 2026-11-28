@@ -1,0 +1,190 @@
+# Updates you can see, as a Mac shows them: when the daily update
+# (nami-update.timer, base) has put a new version of the computer together
+# for its next start, everyone at a desktop is told ("Restart to Finish
+# Updating", with Restart and Later; a click opens Updates), and again at
+# each login until the computer has restarted into it. Nothing is said when
+# nothing changed. "Software Updates" in the app list is nami-gui's Updates
+# page: what's new, Update Now, Restart Now, and whether updates install
+# automatically. desktop lists this.
+#
+# How it knows: a version is waiting when the newest in /nix/var/nami/os
+# is newer than the one running and hasn't run out of tries to start (its
+# boot entry, nami-N+0-3.conf, then). Root works that out (`state`) as the
+# computer starts and after each update, into /run/nami-update/pending,
+# with the nami that made it in /run/nami-update/version (and the one the
+# computer started with in /run/nami-update/started, for What's New); each
+# person's desktop watches that file.
+services:
+  - nami-update-state.service
+  # Each person's, in their desktop session (graphical-session.target).
+  - nami-update-notify.service: { per-person: true }
+  - nami-update-notify.path: { per-person: true }
+  # Apps each person installed from downloads (a .deb, .rpm, AppImage)
+  # update with it: once a day, on the same switch (nami-update.timer),
+  # each checked against its maker's signature (src/foreign_update.rs).
+  - nami-app-updates.timer: { per-person: true }
+files:
+  /etc/nami-os/update/state:
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      # Is a new version of this computer waiting for its next start? As
+      # root: its number into /run/nami-update/pending (written only when
+      # it changes, so nobody is told twice), or no file. --check: only say.
+      PATH=/run/current-system/sw/bin
+      cur=$(readlink /run/current-system); cur=${cur##*system-}
+      case $cur in ''|*[!0-9]*) cur=0 ;; esac
+      new=0
+      for d in /nix/var/nami/os/system-*; do
+        n=${d##*system-}
+        case $n in ''|*[!0-9]*) continue ;; esac
+        [ "$n" -gt "$new" ] && new=$n
+      done
+      f=/run/nami-update/pending
+      [ "${1:-}" = --check ] || mkdir -p /run/nami-update
+      # nami's version (`nami 0.18.6`): as the computer started, and as it is now.
+      v=$(/nix/var/nami/bin/nami --version 2>/dev/null); v=${v##* }
+      [ -e /run/nami-update/started ] || [ "${1:-}" = --check ] || echo "$v" > /run/nami-update/started
+      # (Out of tries: it couldn't start, and the one before started instead.)
+      if [ "$new" -gt "$cur" ] && ! ls /boot/loader/entries/nami-"$new"+0-*.conf >/dev/null 2>&1; then
+        echo "version $new is waiting for the next start (running version $cur)"
+        [ "${1:-}" = --check ] && exit 0
+        echo "$v" > /run/nami-update/version
+        [ "$(cat "$f" 2>/dev/null)" = "$new" ] || { echo "$new" > "$f.new" && mv "$f.new" "$f"; }
+      else
+        echo "nothing waiting (running version $cur)"
+        [ "${1:-}" = --check ] && exit 0
+        rm -f "$f"
+      fi
+      exit 0
+  /etc/nami-os/update/notify:
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      # In each person's desktop session: at login, and when an update
+      # makes a new version, a notification if one is waiting, with
+      # Restart and Later; a click on it opens Updates.
+      new=$(cat /run/nami-update/pending 2>/dev/null)
+      cur=$(readlink /run/current-system); cur=${cur##*system-}
+      case $new in ''|*[!0-9]*) exit 0 ;; esac
+      case $cur in ''|*[!0-9]*) cur=0 ;; esac
+      # (Running it already: `nami apply` switched to it.)
+      [ "$new" -gt "$cur" ] || exit 0
+      # The desktop shows notifications once it's up (at login, next to this).
+      i=0
+      until busctl --user status org.freedesktop.Notifications >/dev/null 2>&1; do
+        i=$((i + 1))
+        [ $i -lt 120 ] || { echo "no notifications on this desktop"; exit 0; }
+        sleep 1
+      done
+      v=$(cat /run/nami-update/version 2>/dev/null)
+      if [ -n "$v" ]; then said="namiOS $v is ready."; else said="An update for namiOS is ready."; fi
+      echo "version $new is ready: telling $(id -un)"
+      a=$(notify-send --app-name="Software Updates" --icon=system-software-update --hint=string:desktop-entry:nami-software-updates \
+        --action=default=Open --action=restart=Restart --action=later=Later --wait \
+        "Restart to Finish Updating" "$said Your work stays as it is until you restart.")
+      case $a in
+        restart)
+          echo "restarting, as $(id -un) asked"
+          exec /etc/nami-os/update/restart ;;
+        default) exec /etc/nami-os/update/now ;;
+      esac
+  /etc/nami-os/update/restart:
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      # Restart into the version waiting: namiOS's desktop asks first;
+      # elsewhere, at once.
+      /run/current-system/sw/bin/nami-desktop power restart 2>/dev/null && exit 0
+      exec systemctl reboot
+  /etc/nami-os/update/now:
+    mode: "0755"
+    content: |
+      #!/bin/sh
+      # Software Updates: nami-gui's Updates page, which looks for updates
+      # as it opens, installs them with Update Now (an admin's password
+      # for someone who isn't one), and restarts with Restart Now.
+      exec nami-gui --page updates
+  /etc/nami-os/share/applications/nami-software-updates.desktop: |
+    [Desktop Entry]
+    Type=Application
+    Name=Software Updates
+    Comment=Install updates for namiOS, nami and your apps
+    Icon=system-software-update
+    Exec=nami-gui --page updates
+    Terminal=false
+    Categories=GTK;System;Settings;PackageManager;
+    Keywords=update;upgrade;restart;software;
+  # Its icon, for themes without one (Yaru has its own).
+  /etc/nami-os/share/icons/hicolor/scalable/apps/system-software-update.svg: |
+    <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#62a0ea"/><stop offset="1" stop-color="#1c71d8"/></linearGradient></defs>
+      <rect x="8" y="8" width="112" height="112" rx="24" fill="url(#g)"/>
+      <path d="M64 30a34 34 0 1 0 31 20" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+      <path d="M84 28l16 18-23 6z" fill="#fff"/>
+      <path d="M64 44v32m-13-13l13 13 13-13" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  /etc/systemd/system/nami-update-state.service: |
+    [Unit]
+    Description=Is an update waiting for the next start? (for the desktop's notice)
+    # (The boot partition says whether a version ran out of tries; it
+    # may be mounted a moment later, or not be there at all.)
+    WantsMountsFor=/boot
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/etc/nami-os/update/state
+    [Install]
+    WantedBy=multi-user.target
+  # After each update: what's waiting now.
+  /etc/systemd/system/nami-update.service.d/notify.conf: |
+    [Service]
+    ExecStartPost=/etc/nami-os/update/state
+  /etc/systemd/user/nami-update-notify.service: |
+    [Unit]
+    Description=Tells you when an update is ready (restart to use it)
+    PartOf=graphical-session.target
+    After=graphical-session.target
+    ConditionUser=!@system
+    [Service]
+    ExecStart=/etc/nami-os/update/notify
+    [Install]
+    WantedBy=graphical-session.target
+  /etc/systemd/user/nami-update-notify.path: |
+    [Unit]
+    Description=Watches for an update ready for the next start
+    PartOf=graphical-session.target
+    ConditionUser=!@system
+    [Path]
+    PathModified=/run/nami-update/pending
+    Unit=nami-update-notify.service
+    [Install]
+    WantedBy=graphical-session.target
+  # The person's apps from downloads, kept up to date: looked at once a day
+  # (at most: a run within the day only puts in place an update that was
+  # waiting for its app to be closed), quietly, as the computer's own
+  # update is, and only while it updates itself (`nami file-apps --update
+  # --background` asks nami-update.timer). "X was updated" says so after.
+  /etc/systemd/user/nami-app-updates.service: |
+    [Unit]
+    Description=Updates your apps from downloads (checked against their makers' signatures)
+    Wants=network-online.target
+    After=network-online.target
+    ConditionUser=!@system
+    [Service]
+    Type=oneshot
+    Environment=PATH=%h/.local/state/nami/profile/bin:/nix/var/nami/bin:/run/wrappers/bin:/run/current-system/sw/bin
+    ExecStart=/nix/var/nami/bin/nami file-apps --update --background
+    Nice=19
+    IOSchedulingClass=idle
+    TimeoutStartSec=2h
+  /etc/systemd/user/nami-app-updates.timer: |
+    [Unit]
+    Description=Updates your apps from downloads, daily
+    ConditionUser=!@system
+    [Timer]
+    OnStartupSec=5min
+    OnUnitActiveSec=1h
+    RandomizedDelaySec=5min
+    [Install]
+    WantedBy=timers.target

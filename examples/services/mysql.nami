@@ -1,0 +1,20 @@
+# MySQL for a project (MariaDB, which speaks MySQL): copy this file to its
+# services/ folder and list it, `- ./services/mysql.nami`, under services:
+# in its project.nami. Its data and socket are in the project's .nami/mysql
+# ({sockets}: a short folder elsewhere when that path is too long for a socket).
+# The database is named after the project's folder; root has no password
+# (it only listens on this computer).
+about: MySQL (MariaDB), the database
+packages: [mariadb]
+port: 3306
+init: |
+  mariadb-install-db --no-defaults --datadir={state}/data --auth-root-authentication-method=normal --skip-test-db >/dev/null
+  echo 'CREATE DATABASE IF NOT EXISTS `{project}`;' > {state}/init.sql
+run: mariadbd --no-defaults --datadir={state}/data --socket={sockets}/mysql.sock --port={port} --bind-address=127.0.0.1 --pid-file={state}/mysqld.pid --init-file={state}/init.sql
+ready: mariadb-admin --no-defaults --socket={sockets}/mysql.sock -u root ping
+as-root: false              # it won't, by default: as root, nami runs it as nobody
+exports:
+  MYSQL_UNIX_PORT: "{sockets}/mysql.sock"   # the mysql client uses the socket
+  MYSQL_TCP_PORT: "{port}"
+  MYSQL_DATABASE: "{project}"
+  DATABASE_URL: mysql://root@localhost:{port}/{project}

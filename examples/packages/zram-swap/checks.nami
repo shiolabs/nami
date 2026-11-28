@@ -1,0 +1,4 @@
+# How to tell zram-swap works, on a computer nami made (tests/usb.sh runs these).
+"swap: compressed memory (zram)":
+  run: swapon --show=NAME,TYPE --noheadings
+  expect: "/dev/zram0 +partition"

@@ -1,0 +1,65 @@
+name: Apps
+
+# A pull request that adds or changes an extra app (packaging/apps/<name>)
+# gets it built the way a release builds it, against the live signed catalog,
+# and a report of what nami would show: name, summary, publisher, license,
+# icon, and every URL the build downloads (for the reviewer). Merging doesn't
+# publish; the next release builds and signs it.
+#
+# On GitHub's own runners, read-only and without secrets: the recipe is
+# someone else's code, and it runs where it can't reach anything of ours.
+on:
+  pull_request:
+    paths: ["packaging/apps/**", "packaging/check-app.sh", "packaging/extra-apps.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: build and check the apps
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Which apps
+        id: apps
+        run: |
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- packaging/apps | cut -d/ -f3 | sort -u)
+            # Changes to the checker itself: check every app.
+            git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- packaging/check-app.sh packaging/extra-apps.py \
+              || changed=$(ls packaging/apps)
+          else
+            changed=$(ls packaging/apps)
+          fi
+          dirs=$(for a in $changed; do if [ -d "packaging/apps/$a" ]; then printf 'packaging/apps/%s ' "$a"; fi; done)
+          echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          echo "apps: ${dirs:-none (only removals)}"
+      - name: Build nami
+        if: steps.apps.outputs.dirs != ''
+        run: ./build.sh
+      - name: What the check needs
+        if: steps.apps.outputs.dirs != ''
+        run: |
+          # check-app.sh builds in a user namespace (unshare -r), which
+          # Ubuntu 24.04 allows only once AppArmor's restriction is off.
+          sudo sysctl -qw kernel.apparmor_restrict_unprivileged_userns=0
+          sudo apt-get install -y -qq python3-pil python3-yaml >/dev/null
+      - name: Build and check
+        if: steps.apps.outputs.dirs != ''
+        run: |
+          set +e
+          CHECK_ROOT=$RUNNER_TEMP/apps-root packaging/check-app.sh ${{ steps.apps.outputs.dirs }} > report.md
+          status=$?
+          set -e
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          cat report.md
+          case $status in
+            0) ;;
+            2) echo "::error::Builds, but nami would show it incomplete (see **missing** in the report)"; exit 1 ;;
+            *) echo "::error::Doesn't build, or isn't an app (see the report)"; exit 1 ;;
+          esac

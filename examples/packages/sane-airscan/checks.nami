@@ -1,0 +1,4 @@
+# How to tell sane-airscan works, on a computer nami made (tests/usb.sh runs these).
+"network scanners' driver":
+  run: SANE_DEBUG_DLL=4 timeout 60 scanimage -L 2>&1 | grep -c 'libsane-airscan' | sed 's/^/N=/'
+  expect: "N=[1-9]"

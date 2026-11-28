@@ -1,0 +1,8 @@
+# The public keys nami's site is signed with (packaging/publish.sh), one per
+# line: name:base64, as `nami keygen` prints. The installer knows them all and
+# trusts the ones in use: the key the release is signed with, and the one the
+# catalog is (they differ while a new key comes in: a release is signed with it
+# at once, the catalog when it's next built). publish.sh adds KEY_NAME's.
+# A key goes from here once nothing published is signed with it any more.
+tray-2:uHz+KI06voKMb/xTAfd9nd4d8y008M5x5xWFy/pbpIs=
+tray-3:2mdy3XffXu9eaNi6oBseLBb0/wLipqSmsWduhkaaU84=

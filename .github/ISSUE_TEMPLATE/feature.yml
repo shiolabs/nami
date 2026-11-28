@@ -1,0 +1,23 @@
+name: Idea or request
+description: Something nami should do, or an app that should work better
+labels: [enhancement]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What would you like to do?
+      description: Describe it from your side of the screen, not how nami should do it.
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which part
+      options:
+        - System (the computer's apps, /etc/nami/computer.nami)
+        - User (my own apps and settings, ~/user.nami)
+        - Project (a project's tools, project.nami in the repo)
+        - The app (GUI)
+        - The catalog (packages)
+        - nami bundle (an app as one file)
+        - Not sure

@@ -1,0 +1,5 @@
+# nixpkgs' jq, plus one patch. Everything else (dependencies, build steps,
+# its five outputs) comes from the nixpkgs definition; only jq is rebuilt.
+extends: jq
+name: jq-patched
+patches: [./nami-help.patch]

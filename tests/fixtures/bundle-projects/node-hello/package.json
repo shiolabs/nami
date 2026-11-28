@@ -1,0 +1,8 @@
+{
+  "name": "@nami-test/node-hello",
+  "version": "1.0.0",
+  "description": "Says hello, from a bundle",
+  "bin": "cli.js",
+  "engines": { "node": ">=20" },
+  "dependencies": { "ms": "^2.1.3" }
+}

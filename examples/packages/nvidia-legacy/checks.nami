@@ -1,0 +1,19 @@
+# How to tell nvidia-legacy works, on a computer nami made (tests/usb.sh runs these).
+"NVIDIA (older cards): the 535 modules, built for the kernel that runs":
+  run: '[ "$(modinfo -F vermagic nvidia | cut -d" " -f1)" = "$(uname -r)" ] && modinfo -F version nvidia'
+  expect: "^535\\."
+"NVIDIA (older cards): modprobe knows what needs what (depmod)":
+  run: modprobe -D nvidia_drm 2>&1 | tr '\n' ' '
+  expect: "nvidia\\.ko.*nvidia-modeset\\.ko.*nvidia-drm\\.ko"
+"NVIDIA (older cards): nouveau is kept away, and the display gets KMS":
+  run: modprobe -c | grep -E '^(blacklist nouveau|options nvidia_drm)' | tr '\n' ' '
+  expect: "blacklist nouveau options nvidia_drm modeset=1"
+"NVIDIA (older cards): the libraries, next to mesa's, 32-bit too":
+  run: ls /run/opengl-driver/share/glvnd/egl_vendor.d /run/opengl-driver/share/vulkan/icd.d /run/opengl-driver-32/lib | grep -cxE '10_nvidia.json|50_mesa.json|nvidia_icd.json|libEGL_nvidia.so.0' | sed 's/^/N=/'
+  expect: "N=4"
+"NVIDIA (older cards): suspend tells the driver":
+  run: systemctl is-enabled nvidia-suspend.service nvidia-resume.service | tr '\n' ' '
+  expect: "^enabled enabled"
+"NVIDIA (older cards): nvidia-smi runs":
+  run: nvidia-smi 2>&1 | head -3
+  expect: "NVIDIA-SMI|Driver Version|NVIDIA driver"

@@ -1,0 +1,192 @@
+# What any desktop needs (niri's, and any other): the
+# services desktops talk to, sound, fonts and a browser. Printing,
+# scanning, power, fingerprint login, parental controls, running out of
+# memory, being told of updates, the boot splash, braille displays and a
+# VM's guest tools are each a file of its own, listed here (`without:`
+# leaves one out).
+packages:
+  - base
+  - printing
+  - scanning
+  - power
+  - fprintd
+  - parental-controls
+  - oomd
+  - update-notify
+  - plymouth
+  - brltty
+  - vm-guest
+  # Apps built for other distributions (a downloaded tarball, an AppImage, a game):
+  # their libraries, and Files starting them.
+  - other-linuxes-desktop
+  # nami's window: apps, people, settings, history, making a USB drive.
+  - nami-gui
+  # The services behind every desktop.
+  - accountsservice
+  - polkit
+  # An admin's password for a change for everyone (nami's daemon asks it).
+  - nami-polkit
+  - rtkit
+  - geoclue2
+  - colord
+  - at-spi2-core
+  # Graphics and input.
+  - mesa
+  - xwayland
+  - libinput
+  - gtk3
+  - gtk4
+  # Drives, settings.
+  - udisks
+  - gvfs
+  # Windows computers on the network, in Files' Other Locations (gvfs
+  # starts it to look).
+  - wsdd
+  - dconf
+  # GSettings' way to dconf, for programs nobody wrapped with it (gsettings itself,
+  # Java's and Electron's GTK look, apps from elsewhere): else they read only the
+  # defaults, never what's set (dark, fonts).
+  - dconf.lib
+  - glib.bin
+  - glib-networking
+  - gsettings-desktop-schemas
+  - xdg-desktop-portal
+  - xdg-desktop-portal-gtk
+  - xdg-user-dirs
+  # Sound.
+  - pipewire
+  - wireplumber
+  - sound-theme-freedesktop
+  # Icons, pictures and thumbnails.
+  - adwaita-icon-theme
+  - hicolor-icon-theme
+  - shared-mime-info
+  - librsvg
+  - gdk-pixbuf
+  - webp-pixbuf-loader
+  - libheif
+  - ffmpegthumbnailer
+  # Fonts, every language's writing, and spell checking.
+  - cantarell-fonts
+  - adwaita-fonts
+  - dejavu_fonts
+  - noto-fonts
+  - noto-fonts-color-emoji
+  - noto-fonts-cjk-sans
+  # Arial, Times New Roman and Courier New's sizes, for documents from
+  # Windows (fonts-liberation).
+  - liberation_ttf
+  - fontconfig.out
+  - fontconfig.bin
+  - hunspell
+  - hunspellDicts.en_US
+  # A browser.
+  - firefox
+  # What scripts and apps run on a desktop: opening a file or link in its
+  # app (xdg-open), notifications, dialogs, and the sound card's tools.
+  - xdg-utils
+  - libnotify
+  - zenity
+  - alsa-utils
+  # Playing video and music (what Ubuntu's restricted extras add, too).
+  - gst_all_1.gstreamer
+  - gst_all_1.gst-plugins-base
+  - gst_all_1.gst-plugins-good
+  - gst_all_1.gst-plugins-bad
+  - gst_all_1.gst-plugins-ugly
+  - gst_all_1.gst-libav
+  # Laptops: screen rotation.
+  - iio-sensor-proxy
+drivers:
+  # The graphics drivers for every GPU but NVIDIA's (nvidia adds those).
+  graphics: [mesa]
+# Where the desktop's programs find their plugins, and what's built below.
+env:
+  NIX_GSETTINGS_OVERRIDES_DIR: /etc/nami-os/schemas
+  GDK_PIXBUF_MODULE_FILE: /etc/nami-os/gdk-pixbuf-loaders.cache
+  GIO_EXTRA_MODULES: /run/current-system/sw/lib/gio/modules
+  XCURSOR_PATH: /etc/nami-os/icons:/run/current-system/sw/share/icons
+  GST_PLUGIN_SYSTEM_PATH_1_0: /run/current-system/sw/lib/gstreamer-1.0
+  NAUTILUS_4_EXTENSION_DIR: /run/current-system/sw/lib/nautilus/extensions-4
+  GTK_PATH: /run/current-system/sw/lib/gtk-3.0:/run/current-system/sw/lib/gtk-4.0
+  QT_PLUGIN_PATH: /run/current-system/sw/lib/qt-6/plugins
+  QML2_IMPORT_PATH: /run/current-system/sw/lib/qt-6/qml:/etc/nami-os/qml
+  NIXPKGS_QT6_QML_IMPORT_PATH: /run/current-system/sw/lib/qt-6/qml:/etc/nami-os/qml
+files:
+  # What an admin at the computer does without a password, as on Ubuntu
+  # (policykit-desktop-privileges): open the computer's own drives in
+  # Files, set the clock and time zone (and so the automatic time zone),
+  # and the computer's language.
+  /etc/polkit-1/rules.d/20-desktop.rules: |
+    polkit.addRule(function(action, subject) {
+      // Joining a Wi-Fi network: everyone's in this group, and it shouldn't take an admin's password.
+      if (subject.local && subject.active && subject.isInGroup("networkmanager") && action.id.indexOf("org.freedesktop.NetworkManager.") == 0) return polkit.Result.YES;
+      if (!subject.local || !subject.active || !subject.isInGroup("wheel")) return polkit.Result.NOT_HANDLED;
+      var id = action.id;
+      if (id.indexOf("org.freedesktop.udisks2.filesystem-mount") == 0 || id == "org.freedesktop.udisks2.encrypted-unlock-system" ||
+          id == "org.freedesktop.udisks2.filesystem-fstab" || id.indexOf("org.freedesktop.timedate1.") == 0 ||
+          id == "org.freedesktop.locale1.set-locale")
+        return polkit.Result.YES;
+      return polkit.Result.NOT_HANDLED;
+    });
+  # The cursor programs get when they ask for "default" (niri, X11 apps).
+  /etc/nami-os/icons/default/index.theme: |
+    [Icon Theme]
+    Name=Default
+    Inherits=Adwaita
+  # Every installed font (fontconfig's own settings come with it): the computer's, and the
+  # ones a person installs for themselves (fonts in their user.nami).
+  /etc/fonts/conf.d/00-nami-fonts.conf: |
+    <?xml version='1.0'?>
+    <!DOCTYPE fontconfig SYSTEM 'urn:fontconfig:fonts.dtd'>
+    <fontconfig><dir>/run/current-system/sw/share/fonts</dir><dir>~/.local/state/nami/profile/share/fonts</dir><cachedir>/var/cache/fontconfig</cachedir></fontconfig>
+  # Made from what's installed, as the system is put together.
+  # Every package's settings schemas, compiled into one.
+  /etc/nami-os/schemas:
+    tools: [glib.dev]
+    script: |
+      shopt -s nullglob
+      mkdir -p "$out"
+      for p in $packages; do
+        for f in "$p"/share/glib-2.0/schemas/*.{xml,override} "$p"/share/gsettings-schemas/*/glib-2.0/schemas/*.{xml,override}; do
+          [ -e "$out/${f##*/}" ] || cp "$f" "$out/"
+        done
+      done
+      glib-compile-schemas "$out"
+  # Which program opens which kind of file.
+  /etc/nami-os/share/mime:
+    tools: [shared-mime-info]
+    script: |
+      shopt -s nullglob
+      mkdir -p "$out/packages"
+      for p in $packages; do
+        for f in "$p"/share/mime/packages/*; do
+          [ -e "$out/packages/${f##*/}" ] || cp "$f" "$out/packages/"
+        done
+      done
+      XDG_DATA_DIRS= update-mime-database "$out"
+  # QML modules of packages that are only a list of others (nixpkgs'
+  # kdePackages.kirigami is one: KDE's apps'
+  # building blocks), next to everyone's in sw/lib/qt-6/qml.
+  /etc/nami-os/qml:
+    script: |
+      shopt -s nullglob
+      mkdir -p "$out"
+      # (Two steps down: the list names the -dev outputs, theirs the rest.)
+      for p in $packages; do
+        [ -e "$p/lib" ] || [ ! -e "$p/nix-support/propagated-build-inputs" ] && continue
+        for q in $(cat "$p/nix-support/propagated-build-inputs"); do
+          for r in "$q" $(cat "$q/nix-support/propagated-build-inputs" 2>/dev/null || true); do
+            if [ -d "$r/lib/qt-6/qml" ]; then cp -rsn "$r/lib/qt-6/qml/." "$out/"; fi
+          done
+        done
+      done
+  # Every installed image loader (SVG, WebP, HEIC...), in one list.
+  /etc/nami-os/gdk-pixbuf-loaders.cache:
+    tools: [gdk-pixbuf.dev]
+    script: |
+      shopt -s nullglob
+      loaders=()
+      # (each a link into its package; or the folder is one, with one package)
+      for l in sw/lib/gdk-pixbuf-2.0/2.10.0/loaders/*.so; do loaders+=("$(readlink "$l" || readlink -f "$l")"); done
+      gdk-pixbuf-query-loaders "${loaders[@]}" > "$out"

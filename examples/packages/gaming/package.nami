@@ -1,0 +1,10 @@
+# Games: Steam and the other stores, and GameMode while a game runs.
+# `- gaming` in system.nami; the window offers it under "What it's for".
+# Take one out with `without: [mangohud]`; add more by name (lutris,
+# bottles, prismlauncher, retroarch).
+packages:
+  - steam            # Steam, with its 32-bit drivers and controllers
+  - heroic           # Epic, GOG and Amazon games
+  - protonup-qt      # more Proton builds, for Steam and Heroic
+  - gamemode         # the computer set for the game while it runs
+  - mangohud         # frame rate and temperatures over the game

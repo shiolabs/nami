@@ -1,0 +1,8 @@
+# Local source, CMake, and a library from nixpkgs (zlib).
+name: zcat-lite
+version: 0.1.0
+source:
+  path: ./src
+build-deps: [cmake]
+deps: [zlib]
+cmake-flags: [-DGREETING=nami]

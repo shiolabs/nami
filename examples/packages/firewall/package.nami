@@ -1,0 +1,127 @@
+# The firewall, as a Mac's or Windows' is: nothing from outside connects
+# to this computer unless it's allowed. What this computer starts (a web
+# page, an update, a call) gets its answers as always. Settings' Privacy
+# & Security turns it on and off and says what's allowed in; that's
+# written in system.nami, as:
+#
+#   files:
+#     /etc/firewall/firewall.conf:
+#       on: true
+#       allow:
+#         LocalSend: [tcp 53317, udp 53317]
+#         Remote login (SSH): tcp 22
+#
+# A package whose program others connect to brings its own file in
+# /etc/firewall/allow.d (tailscale's, steam's, KDE Connect's), with the
+# same [allow] lines: `name = tcp 22`, `name = udp 5000-5010`.
+#
+# Always let in, firewall or not: this computer itself; its own containers,
+# VMs and tailnet (Docker's and Podman's bridges, libvirt's, tailscale0:
+# what's on them is this computer's or yours, and Tailscale's own rules
+# say who's on the tailnet); ping and IPv6's own messages; the names of
+# printers and computers on the network (mDNS), and devices there
+# answering when asked (UPnP, WS-Discovery); an address from the network
+# (DHCP); and what sharing this connection (a hotspot) needs.
+#
+# nftables, a table of its own (inet nami_firewall): Docker's, Tailscale's
+# and others' tables stay theirs. firewall.service loads it before the
+# network comes up, and again whenever `nami apply` changes what's allowed.
+packages:
+  - nftables
+services:
+  - firewall.service
+files:
+  /etc/firewall/firewall.conf:
+    content:
+      on: true
+      allow: {}
+    restarts: firewall.service
+  /etc/firewall/firewall.sh: |
+    # firewall.service: the firewall's rules, from firewall.conf and what
+    # packages allow in allow.d. `stop`: none; `print`: the rules, not
+    # loaded. (FIREWALL_CONF and FIREWALL_DIR: other files, to try.)
+    set -eu
+    PATH=/run/current-system/sw/bin:$PATH
+    conf=${FIREWALL_CONF:-/etc/firewall/firewall.conf}
+    dir=${FIREWALL_DIR:-/etc/firewall/allow.d}
+    what=${1:-start}
+    off() { nft delete table inet nami_firewall 2>/dev/null || true; }
+    if [ "$what" = stop ]; then off; exit 0; fi
+    # (Before any [section]: `on = false` turns it off.)
+    on=$(awk '/^\[/ { exit } { i = index($0, " = ") } i && substr($0, 1, i - 1) == "on" { v = substr($0, i + 3) } END { print v }' "$conf" 2>/dev/null || true)
+    if [ "$on" = false ]; then
+      echo "off: $conf says on = false"
+      [ "$what" = print ] || off
+      exit 0
+    fi
+    # What's allowed in: `name = tcp 22` in an [allow] section. Anything
+    # else is said, and left out: one wrong line never leaves it open.
+    allowed() {
+      for f in "$conf" "$dir"/*.conf; do
+        [ -r "$f" ] || continue
+        awk -v file="$f" '
+          /^\[/ { on = ($0 == "[allow]"); next }
+          !on || !index($0, " = ") { next }
+          {
+            i = index($0, " = "); name = substr($0, 1, i - 1); said = substr($0, i + 3)
+            n = split(said, w, " "); lo = w[2]; hi = w[2]
+            if (index(lo, "-")) { hi = substr(lo, index(lo, "-") + 1); lo = substr(lo, 1, index(lo, "-") - 1) }
+            if (n != 2 || (w[1] != "tcp" && w[1] != "udp") || lo !~ /^[0-9]+$/ || hi !~ /^[0-9]+$/ || lo + 0 < 1 || hi + 0 > 65535 || lo + 0 > hi + 0) {
+              printf "%s: not understood, left out: %s\n", file, $0 > "/dev/stderr"; next
+            }
+            gsub(/["\\]/, "", name)
+            printf "    %s dport %s accept comment \"%s\"\n", w[1], (lo == hi ? lo : lo "-" hi), substr(name, 1, 100)
+          }' "$f"
+      done
+    }
+    rules=$(allowed)
+    private4="10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16"
+    private6="fe80::/10, fc00::/7"
+    ruleset() {
+      cat <<RULES
+    table inet nami_firewall
+    delete table inet nami_firewall
+    table inet nami_firewall {
+      chain input {
+        type filter hook input priority filter; policy drop;
+        ct state established,related accept
+        ct state invalid drop
+        iif lo accept
+        iifname "tailscale0" accept comment "the tailnet"
+        iifname "docker0" accept comment "containers"
+        iifname "br-*" accept comment "containers"
+        iifname "podman*" accept comment "containers"
+        iifname "virbr*" accept comment "virtual machines"
+        meta l4proto { 1, 2, 58 } accept comment "ping, and the network's own messages (ICMP, IGMP, ICMPv6)"
+        udp dport 5353 accept comment "names of computers and printers on the network (mDNS)"
+        udp sport 67 udp dport 68 accept comment "an address from the network (DHCP)"
+        ip6 saddr fe80::/10 udp sport 547 udp dport 546 accept comment "an address from the network (DHCPv6)"
+        ip saddr { $private4 } udp sport { 1900, 3702, 5353 } accept comment "devices on the network answering (UPnP, WS-Discovery, mDNS)"
+        ip6 saddr { $private6 } udp sport { 1900, 3702, 5353 } accept comment "devices on the network answering (UPnP, WS-Discovery, mDNS)"
+        udp dport 67 accept comment "sharing this connection (hotspot): addresses"
+        ip saddr { $private4 } meta l4proto { tcp, udp } th dport 53 accept comment "sharing this connection (hotspot): names"
+    $rules
+        counter comment "blocked"
+      }
+    }
+    RULES
+    }
+    if [ "$what" = print ]; then ruleset; exit 0; fi
+    ruleset | nft -f -
+    echo "on: incoming connections only for what's allowed ($(printf '%s\n' "$rules" | grep -c accept || true) allowed)"
+  /etc/systemd/system/firewall.service: |
+    [Unit]
+    Description=The firewall: incoming connections only for what's allowed
+    DefaultDependencies=no
+    After=local-fs.target
+    Before=network-pre.target shutdown.target
+    Wants=network-pre.target
+    Conflicts=shutdown.target
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/run/current-system/sw/bin/sh /etc/firewall/firewall.sh start
+    ExecReload=/run/current-system/sw/bin/sh /etc/firewall/firewall.sh start
+    ExecStop=/run/current-system/sw/bin/sh /etc/firewall/firewall.sh stop
+    [Install]
+    WantedBy=multi-user.target

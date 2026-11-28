@@ -1,0 +1,69 @@
+name: CI
+
+# On GitHub's own runners, for every push to main and every pull request:
+# the unit tests (on Ubuntu: some read glibc's libc and run bash), the
+# static build (./build.sh, in a container), the nami app (gui/, built and
+# its unit tests run, with the libraries its windows use), and the scripts
+# parse and their own tests pass. Nothing here has secrets or write access,
+# so a pull request from anyone can run it (after a maintainer approves a
+# first-time contributor's run).
+# A change to the README and its pictures alone runs nothing. A newer push to main
+# waits for the run before it instead of cancelling it (a cancelled run shows as
+# failing); a pull request's newer push does cancel its older run. It can also be run
+# by hand (Actions, CI, Run workflow).
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['README.md', 'docs/readme/**']
+  pull_request:
+    paths-ignore: ['README.md', 'docs/readme/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  nami:
+    name: nami (unit tests, static build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: cargo test --release
+      - name: Static build
+        run: ./build.sh && file target/release/nami && target/release/nami --version
+
+  gui:
+    name: nami app (build, unit tests)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: The libraries its windows use
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq pkg-config libfontconfig-dev libfreetype-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb1-dev libwayland-dev >/dev/null
+      - name: Build
+        run: cargo build --locked --manifest-path gui/Cargo.toml
+      - name: Unit tests
+        run: cargo test --locked --manifest-path gui/Cargo.toml
+
+  scripts:
+    name: scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell scripts parse
+        run: for f in install.sh uninstall.sh build.sh index/*.sh packaging/*.sh tests/*.sh action/*.sh; do bash -n "$f" || exit 1; done
+      - name: Python scripts parse
+        run: python3 -m py_compile index/*.py packaging/*.py
+      - name: Extra apps' metadata
+        run: sudo apt-get install -y -qq python3-pil python3-yaml >/dev/null && python3 -I packaging/extra-apps-test.py
+      - name: The catalog's build definitions and closures
+        run: python3 -I index/defs-test.py && python3 -I index/closures-test.py
+      - name: Apps' icons
+        run: python3 -I index/apps-test.py

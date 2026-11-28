@@ -1,0 +1,7 @@
+# hexyl: A command-line hex viewer (https://github.com/sharkdp/hexyl)
+# By `nami recipe from-url https://github.com/sharkdp/hexyl --version 0.17.0`: a Rust project, built with Cargo; its crates come as its Cargo.lock pins them.
+# Its sha256 is in nami.lock, next to this file. Check it, then: nami build ./rust-hexyl
+name: hexyl
+version: 0.17.0
+source:
+  url: https://github.com/sharkdp/hexyl/archive/refs/tags/v0.17.0.tar.gz

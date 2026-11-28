@@ -1,0 +1,9 @@
+# Writing code: an editor, containers and git (with gnome-keyring's SSH
+# agent on the desktop). Others: zed-editor, podman, gnome-builder,
+# dbeaver-bin, bruno.
+packages:
+  - vscode
+  - docker
+  - git
+  - gh               # GitHub from the command line
+  - meld             # comparing files and folders

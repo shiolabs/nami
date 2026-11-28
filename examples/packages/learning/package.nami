@@ -1,0 +1,7 @@
+# Learning: flash cards, maths, the stars, and games for children.
+# Others: tuxpaint.
+packages:
+  - anki
+  - geogebra6
+  - stellarium
+  - gcompris

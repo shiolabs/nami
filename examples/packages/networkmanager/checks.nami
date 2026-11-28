@@ -1,0 +1,10 @@
+# How to tell networkmanager works, on a computer nami made (tests/usb.sh runs these).
+"the network (NetworkManager)":
+  run: nmcli -t -f STATE general; systemctl is-active systemd-networkd
+  expect: "^connected"
+"one network manager (not systemd-networkd too)":
+  run: systemctl is-active systemd-networkd || true
+  expect: "^inactive"
+"VPN: NetworkManager's list of plugins, each with its program":
+  run: for f in /etc/NetworkManager/VPN/*.name; do p=$(sed -n 's/^program=//p' "$f"); [ -x "$p" ] && echo "PLUGIN ${f##*/}"; done
+  expect: "PLUGIN nm-"

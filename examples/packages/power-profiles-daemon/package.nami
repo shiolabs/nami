@@ -1,0 +1,3 @@
+# power-profiles-daemon: power modes (balanced, saver, performance).
+services:
+  - power-profiles-daemon.service

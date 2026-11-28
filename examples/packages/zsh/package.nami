@@ -1,0 +1,27 @@
+# zsh, the shell (macOS's), set up as a good one: a long shared history,
+# completion with a menu (any case), cd by folder name, Emacs keys, the
+# completions packages bring. And /etc/zshrc.d: what packages add for it
+# (files: /etc/zshrc.d/<name>.zsh). No first-run questions. A command
+# that isn't here says which package has it, and runs it once if you like
+# (`, cowsay hi`).
+files:
+  # (zsh asks a new person how to set it up when they have no ~/.zshrc:
+  # not here, this is set up)
+  /etc/zshenv: |
+    zsh-newuser-install() { :; }
+  /etc/zshrc: |
+    [[ -o interactive ]] || return
+    HISTFILE=~/.zsh_history HISTSIZE=50000 SAVEHIST=50000
+    setopt share_history hist_ignore_all_dups hist_reduce_blanks autocd interactive_comments no_beep
+    bindkey -e
+    fpath+=(~/.local/state/nami/profile/share/zsh/site-functions /nix/var/nami/profiles/default/share/zsh/site-functions /run/current-system/sw/share/zsh/site-functions)
+    autoload -Uz compinit && compinit -d ~/.cache/zcompdump
+    zstyle ':completion:*' menu select
+    zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+    # A command that isn't here: which package has it, and run it once (`, cowsay hi`: nami try; the hook says run-once, which every nami knows, as this package may update before nami does).
+    command_not_found_handler() {
+      [[ -x /nix/var/nami/bin/nami ]] && { /nix/var/nami/bin/nami run-once --not-found -- "$@"; return; }
+      print -u2 "zsh: command not found: $1"; return 127
+    }
+    ,() { /nix/var/nami/bin/nami run-once "$@"; }
+    for f in /etc/zshrc.d/*.zsh(N); do source $f; done; unset f

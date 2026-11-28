@@ -1,0 +1,24 @@
+# Parental controls, as Ubuntu has them (malcontent): a child on the
+# computer (users: <them>: { child: true } in system.nami) logs in only
+# in their hours, and their session ends when the hours do; the apps in
+# their without: are off their menu and their desktop won't start them
+# (GNOME's; other desktops keep the hours only). nami gives each person's
+# limits to AccountsService at every start. desktop lists this.
+packages:
+  - malcontent
+  # Its library (GNOME Shell reads the limits with it) and its login rule.
+  - malcontent.lib
+  - malcontent.pam
+# GNOME Shell finds the library where it looks for libraries it calls.
+env:
+  GI_TYPELIB_PATH: /run/current-system/sw/lib/girepository-1.0
+# The hours, checked for children alone (everyone else steps past it).
+login:
+  all:
+    - account [success=1 default=ignore] /run/current-system/sw/lib/security/pam_succeed_if.so quiet user notingroup children
+    - account required /run/current-system/sw/lib/security/pam_malcontent.so
+files:
+  # AccountsService keeps the limits: it finds malcontent's part of them here.
+  /etc/systemd/system/accounts-daemon.service.d/parental-controls.conf: |
+    [Service]
+    Environment=XDG_DATA_DIRS=/run/current-system/sw/share

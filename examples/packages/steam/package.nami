@@ -1,0 +1,30 @@
+# Steam, with what its games need from the computer: `- steam` in
+# system.nami. Steam runs its games in a container of its own (Steam
+# Runtime), with Proton for Windows games.
+#
+# - Most games are 32-bit, or start through 32-bit parts: they draw with
+#   the 32-bit graphics drivers in /run/opengl-driver-32 (mesa's here,
+#   NVIDIA's from nvidia), and play sound through PipeWire's 32-bit ALSA
+#   plugin, next to them (the pipewire package points ALSA there).
+# - Controllers (Steam's own, PlayStation's, Xbox's, the Steam Deck's) and
+#   VR headsets: their udev rules let Steam open them, and uinput lets
+#   Steam Input be a controller games understand.
+packages:
+  # Steam's runtime for programs outside Steam (steam-run ./game).
+  - steam-run
+  - steam-devices-udev-rules
+drivers:
+  graphics-32bit: [pkgsi686Linux.mesa, pkgsi686Linux.pipewire]
+files:
+  /etc/modules-load.d/steam.conf: |
+    uinput
+  # Through the firewall: Remote Play, and games copied from another
+  # computer on the network (Valve's ports).
+  /etc/firewall/allow.d/steam.conf:
+    content: |
+      [allow]
+      Steam Remote Play = udp 27031-27036
+      Steam Remote Play = tcp 27036-27037
+      Steam: games from another computer = tcp 27040
+    # (Let in from now on, not from the next start.)
+    restarts: firewall.service

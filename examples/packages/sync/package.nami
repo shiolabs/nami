@@ -1,0 +1,65 @@
+# Your folders, the same on each of your computers: Syncthing, straight
+# between them (on your network, or across the internet, encrypted), no
+# cloud and no account. In your user.nami (each computer's own):
+#
+#   packages:
+#     - ../../shared/packages/sync
+#   files:
+#     ~/.config/nami-sync.conf:
+#       folders:
+#         Sync: ~/Sync            # the same name on each computer is the same folder
+#         Photos: ~/Pictures
+#       computers:                # the others: their Syncthing ID (`nami-sync id` there)
+#         desktop: MFZWI3D-BONSGYC-YLTMRWG-C43ENR5-QXGZDMM-FZWI3DP-BONSGYY-LTMRWAD
+#
+# Each computer lists the others once, as Syncthing pairs them; an Android
+# phone with Syncthing-Fork is one more ID. Every folder is shared with
+# every computer listed. Taken out of the file, a computer is let go and a
+# folder isn't synced any more (its files stay).
+#
+# How it runs: Syncthing starts when you log in (its own unit, yours), and
+# nami-sync makes it match the file then and whenever the file changes.
+# Syncthing's own page, for the rest: http://127.0.0.1:8384.
+name: sync
+version: "1"
+source:
+  path: ./src
+deps: [syncthing, jq, curl]
+install: |
+  mkdir -p $out/bin $out/share/systemd/user
+  sed -e "s|@syncthing@|$(command -v syncthing)|" -e "s|@jq@|$(command -v jq)|" -e "s|@curl@|$(command -v curl)|" nami-sync > $out/bin/nami-sync
+  chmod +x $out/bin/nami-sync
+  cat > $out/share/systemd/user/nami-sync.service <<UNIT
+  [Unit]
+  Description=Your synced folders and computers, as ~/.config/nami-sync.conf says
+  Wants=syncthing.service
+  After=syncthing.service
+  [Service]
+  Type=oneshot
+  ExecStart=$out/bin/nami-sync apply
+  [Install]
+  WantedBy=default.target
+  UNIT
+  cat > $out/share/systemd/user/nami-sync.path <<UNIT
+  [Unit]
+  Description=Watches ~/.config/nami-sync.conf
+  [Path]
+  PathChanged=%h/.config/nami-sync.conf
+  Unit=nami-sync.service
+  [Install]
+  WantedBy=default.target
+  UNIT
+# Syncthing itself (its unit comes with it).
+packages:
+  - syncthing
+# Syncthing (yours, from its package) and the step that sets it up: each
+# person's own. Listed in system.nami instead, everyone with a
+# ~/.config/nami-sync.conf gets them.
+services:
+  - syncthing.service: { per-person: true }
+  - nami-sync.service: { per-person: true }
+  - nami-sync.path: { per-person: true }
+files:
+  /etc/systemd/user/syncthing.service.d/nami.conf: |
+    [Unit]
+    ConditionPathExists=%h/.config/nami-sync.conf

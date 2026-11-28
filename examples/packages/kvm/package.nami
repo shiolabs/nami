@@ -1,0 +1,17 @@
+# Virtual machines for everyone on the computer, as Ubuntu has them after
+# `usermod -aG kvm you`: /dev/kvm (the processor's virtualization) and
+# /dev/vhost-vsock (talking to what runs inside), for QEMU run by people,
+# not root. Claude Desktop's Cowork runs its tasks in such a VM; GNOME
+# Boxes, virt-manager's user session, Android's emulator and
+# `nami try-os` use /dev/kvm too. `- kvm` in system.nami.
+#
+# Both are the kvm group's (systemd's rules); everyone is in it. The
+# processor's module (kvm_intel or kvm_amd) loads by itself; vhost_vsock
+# loads at start-up, so /dev/vhost-vsock is there before an app looks
+# (Cowork looks once, when it starts). Virtualization must be on in the
+# computer's firmware (Intel VT-x, AMD-V): without it there's no /dev/kvm.
+groups:
+  kvm: everyone
+files:
+  /etc/modules-load.d/kvm.conf: |
+    vhost_vsock

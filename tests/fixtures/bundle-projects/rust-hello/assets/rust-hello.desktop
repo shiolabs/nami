@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Rust Hello
+Comment=Says hello
+Exec=rust-hello %U
+Icon=rust-hello
+Terminal=true
+Categories=Utility;

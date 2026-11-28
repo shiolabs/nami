@@ -1,0 +1,88 @@
+# Visual Studio Code. Unfree, so cache.nixos.org doesn't have it: this takes
+# Microsoft's prebuilt tarball and lets nixpkgs' autoPatchelfHook point every
+# binary at nixpkgs libraries instead of /usr/lib, so it runs on any distro.
+name: vscode
+version: 1.141.0
+source:
+  url: https://update.code.visualstudio.com/1.141.0/linux-x64/stable
+  name: vscode-1.141.0.tar.gz
+  sha256: d77d588f0454cbaaa71e723497de4160d15b95fba4988abe177b1432e6bd570a
+build-deps: [autoPatchelfHook]
+deps:
+  - alsa-lib
+  - at-spi2-atk
+  - at-spi2-core
+  - cairo
+  - cups
+  - curl
+  - dbus
+  - expat
+  - glib
+  - gtk3
+  - libdrm
+  - libgbm
+  - libkrb5
+  - libnotify
+  - libsecret
+  - libuuid
+  - libx11
+  - libxcb
+  - libxcomposite
+  - libxdamage
+  - libxext
+  - libxfixes
+  - libxkbcommon
+  - libxkbfile
+  - libxrandr
+  - libxscrnsaver
+  - libxshmfence
+  - libxtst
+  - nspr
+  - nss
+  - openssl
+  - pango
+  - wayland
+  - libgcc.lib
+runtime-deps: [udev, libGL, libsecret, libnotify]
+install: |
+  mkdir -p $out/lib/vscode $out/bin $out/share/applications $out/share/pixmaps
+  cp -r . $out/lib/vscode
+  # A setuid helper; the store can't hold setuid files. Electron falls back
+  # to user namespaces for its sandbox.
+  rm $out/lib/vscode/chrome-sandbox
+  # Its window buttons on the left, as every window's: on namiOS, VS Code's title bar is the
+  # system's (window.titleBarStyle "native"), niri's with namiOS's three buttons, and VS Code's
+  # menus below it. Its own title bar puts minimize, maximize and close on the right whatever the
+  # desktop says (Electron draws them there, over the page). Said in the person's own settings
+  # the first time, so it's theirs: a titleBarStyle there already ("custom" to have VS Code's own
+  # back) is kept.
+  cat > $out/bin/code <<EOF
+  #!$SHELL
+  s=\${XDG_CONFIG_HOME:-\$HOME/.config}/Code/User/settings.json
+  if [ -n "\${HOME:-}" ] && ! grep -qs '"window.titleBarStyle"' "\$s"; then
+    mkdir -p "\${s%/*}"
+    if [ -n "\$(tr -d ' \t\n{}' 2>/dev/null < "\$s")" ]; then
+      # (Its first line that starts the settings; JSON with comments, so no jq.)
+      sed -i '0,/^[[:space:]]*{/s//{\n  "window.titleBarStyle": "native",/' "\$s"
+    else
+      printf '{\n  "window.titleBarStyle": "native"\n}\n' > "\$s"
+    fi
+  fi
+  exec $out/lib/vscode/bin/code "\$@"
+  EOF
+  chmod +x $out/bin/code
+  cp resources/app/resources/linux/code.png $out/share/pixmaps/vscode.png
+  cat > $out/share/applications/code.desktop <<DESKTOP
+  [Desktop Entry]
+  Name=Visual Studio Code
+  Comment=Code Editing. Redefined.
+  Exec=$out/bin/code %F
+  Icon=vscode
+  Type=Application
+  Categories=Utility;TextEditor;Development;IDE;
+  MimeType=text/plain;inode/directory;
+  DESKTOP
+build-env:
+  # Only the optional Microsoft-account login broker wants these (WebKitGTK);
+  # pulling in a whole browser engine for it isn't worth it.
+  autoPatchelfIgnoreMissingDeps: libwebkit2gtk-4.1.so.0 libsoup-3.0.so.0

@@ -1,0 +1,4 @@
+# sudo: acts as root for whoever runs it (admins, per /etc/sudoers).
+setuid: [bin/sudo]
+login:
+  sudo: su

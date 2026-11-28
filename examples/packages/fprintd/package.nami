@@ -1,0 +1,10 @@
+# fprintd: logging in with a finger, as Ubuntu does (libpam-fprintd), once
+# one is enrolled (Settings, Users, Fingerprint Login). The login and
+# lock screens ask for it next to the password box (each login screen's
+# own service for it, as gdm-fingerprint); sudo, su and the admin questions try it first (10
+# seconds), then ask for the password; the text console asks for the
+# password alone. Without a reader, or with no finger enrolled, it steps
+# aside at once: the password is asked as before.
+login:
+  all:
+    - auth sufficient /run/current-system/sw/lib/security/pam_fprintd.so max-tries=1 timeout=10

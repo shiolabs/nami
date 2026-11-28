@@ -1,0 +1,10 @@
+# How to tell fprintd works, on a computer nami made (tests/usb.sh runs these).
+"fingerprint login: fprintd answers (started by D-Bus)":
+  run: timeout 30 busctl --system call net.reactivated.Fprint /net/reactivated/Fprint/Manager net.reactivated.Fprint.Manager GetDevices
+  expect: "^ao "
+"fingerprint login: tried first by sudo and the admin questions, not by the text console":
+  run: grep -c pam_fprintd /etc/pam.d/sudo /etc/pam.d/polkit-1 /etc/pam.d/login | tr '\n' ' '
+  expect: "sudo:1 .*polkit-1:1 .*login:0"
+"fingerprint login: without a reader, the password is asked at once":
+  run: "timeout 30 sh -c 'echo wrong | sudo -S -k -p \"\" true' 2>&1 | tail -3"
+  expect: "incorrect password|try again"

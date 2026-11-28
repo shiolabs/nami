@@ -1,0 +1,4 @@
+The pictures in this folder are set in Geist and Geist Mono, by the Geist
+Project Authors (https://github.com/vercel/geist-font). Each SVG embeds just
+the letters it uses, as woff2. Both fonts are under the SIL Open Font
+License 1.1: Geist-LICENSE and GeistMono-LICENSE.

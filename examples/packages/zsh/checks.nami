@@ -1,0 +1,4 @@
+# How to tell zsh works, on a computer nami made (tests/vm-quick.sh tests/namios runs these).
+"a command that isn't here says which package has it, and `,` runs it once":
+  run: "zsh -ic 'figlet hi </dev/null; , figlet -v; command -v figlet || echo still-not-installed' 2>&1 | grep -cE 'Keep it: +nami install figlet|FIGlet Copyright|^still-not-installed$' | sed 's/^/N=/'"
+  expect: "N=3"

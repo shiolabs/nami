@@ -1,0 +1,10 @@
+# cowsay-python (https://github.com/VaasuDevanS/cowsay-python)
+# By `nami recipe from-url https://github.com/VaasuDevanS/cowsay-python --version 6.1`: a Python app, its dependencies the catalog's Python packages.
+# Its sha256 is in nami.lock, next to this file. Check it, then: nami build ./python-cowsay
+name: cowsay-python
+version: "6.1"
+source:
+  url: https://github.com/VaasuDevanS/cowsay-python/archive/refs/tags/v6.1.tar.gz
+build-deps:
+  - python3Packages.setuptools   # pyproject.toml: build-system
+  - python3Packages.wheel        # pyproject.toml: build-system

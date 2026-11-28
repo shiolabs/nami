@@ -1,0 +1,4 @@
+# How to tell colord works, on a computer nami made (tests/usb.sh runs these).
+"colour profiles: colord answers (started by D-Bus)":
+  run: timeout 30 busctl --system get-property org.freedesktop.ColorManager /org/freedesktop/ColorManager org.freedesktop.ColorManager DaemonVersion
+  expect: "^s \""

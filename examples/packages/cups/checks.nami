@@ -1,0 +1,7 @@
+# How to tell cups works, on a computer nami made (tests/usb.sh runs these).
+"printing: CUPS runs":
+  run: lpstat -r
+  expect: "scheduler is running"
+"printing: set up as a real file (its user, cupsd.conf)":
+  run: id -u lp; stat -c '%F %a' /etc/cups/cupsd.conf
+  expect: "regular file 640"

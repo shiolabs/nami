@@ -1,0 +1,12 @@
+# Depends on another recipe (../zcat-lite) and a nixpkgs package (cowsay),
+# with a custom install phase and no source at all.
+name: greeting
+version: "1.0"
+deps: [../zcat-lite, cowsay]
+install: |
+  mkdir -p $out/bin
+  cat > $out/bin/greeting <<SCRIPT
+  #!/bin/sh
+  echo "\$($(command -v cowsay) hej)" | gzip | $(command -v zcat-lite)
+  SCRIPT
+  chmod +x $out/bin/greeting

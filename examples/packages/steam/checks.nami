@@ -1,0 +1,13 @@
+# How to tell steam works, on a computer nami made (tests/usb.sh runs these).
+"Steam: in the app list":
+  run: echo $(ls /run/current-system/sw/share/applications/steam.desktop) $(readlink -f $(command -v steam))
+  expect: "^/run/current-system/sw/share/applications/steam.desktop /nix/store/.*steam"
+"Steam: 32-bit graphics drivers, for its games":
+  run: echo $(file -L -b /run/opengl-driver-32/lib/libEGL_mesa.so.0 /run/opengl-driver-32/lib/libvulkan_radeon.so | cut -c1-10)
+  expect: "^ELF 32-bit ELF 32-bit$"
+"Steam: controllers (uinput, and their udev rules)":
+  run: echo $(ls /dev/uinput) $(ls /etc/udev/rules.d/ | grep -c steam)
+  expect: "^/dev/uinput [1-9]"
+"Steam: 32-bit sound, through PipeWire":
+  run: echo $(file -L -b /run/opengl-driver-32/lib/alsa-lib/libasound_module_pcm_pipewire.so | cut -c1-10)
+  expect: "^ELF 32-bit$"

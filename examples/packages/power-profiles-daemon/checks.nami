@@ -1,0 +1,4 @@
+# How to tell power-profiles-daemon works, on a computer nami made (tests/usb.sh runs these).
+"power modes (balanced, saver)":
+  run: powerprofilesctl get
+  expect: "balanced|power-saver|performance"

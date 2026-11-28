@@ -1,0 +1,6 @@
+# Bluetooth: started when the computer has an adapter.
+services:
+  - bluetooth.service
+files:
+  /etc/tmpfiles.d/bluetooth.conf: |
+    d /var/lib/bluetooth 0700 root root -

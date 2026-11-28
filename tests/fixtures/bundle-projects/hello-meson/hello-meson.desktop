@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Hello Meson
+Exec=hello-meson
+Icon=hello-meson
+Terminal=true

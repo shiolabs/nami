@@ -1,0 +1,10 @@
+[connection]
+id=Cafe Wifi
+type=wifi
+
+[wifi]
+mode=infrastructure
+ssid=Cafe Wifi
+
+[ipv4]
+method=auto

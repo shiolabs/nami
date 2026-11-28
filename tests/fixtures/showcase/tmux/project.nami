@@ -1,0 +1,13 @@
+# tmux's release tarball has only a configure script (autotools), which
+# nami can't tell how to build: this says how. Copied into the unpacked
+# tmux-3.8 folder, then `nami bundle .` there.
+packages:
+  - libevent
+  - ncurses
+  - pkg-config
+  - bison
+  - gnumake
+bundle:
+  name: tmux
+  version: "3.8"
+  build: ./configure --prefix=$PREFIX && make -j$(nproc) && make install DESTDIR=$DESTDIR

@@ -1,0 +1,2 @@
+# mount and umount, for the drives fstab lets everyone mount.
+setuid: [bin/mount, bin/umount]

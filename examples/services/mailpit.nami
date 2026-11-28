@@ -1,0 +1,13 @@
+# Mailpit for a project: copy this file to its services/ folder and list it,
+# `- ./services/mailpit.nami`, under services: in its project.nami.
+# Mail the project sends it over SMTP stays here, to read in your browser
+# (MAILPIT_URL). It's ready when its ports answer.
+about: Mailpit, catches the mail the project sends (read it in your browser)
+packages: [mailpit]
+port: 1025
+ports: { web: 8025 }
+run: mailpit --smtp 127.0.0.1:{port} --listen 127.0.0.1:{port.web} --database {state}/mailpit.db
+exports:
+  SMTP_HOST: localhost
+  SMTP_PORT: "{port}"
+  MAILPIT_URL: http://localhost:{port.web}

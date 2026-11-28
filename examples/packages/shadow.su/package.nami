@@ -1,0 +1,4 @@
+# su: becoming another user.
+setuid: [bin/su]
+login:
+  su: su

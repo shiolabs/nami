@@ -1,0 +1,4 @@
+# How to tell brltty works, on a computer nami made (tests/usb.sh runs these).
+"braille displays: brltty, started by udev for one (none here: not running)":
+  run: echo BRLTTY=$(brltty -V 2>&1 | grep -c "^BRLTTY [0-9]") RULES=$(ls /etc/udev/rules.d/ | grep -c brltty) GENERIC=$(grep -c SYSTEMD_WANTS /etc/udev/rules.d/90-brltty-usb-generic.rules) RUNNING=$(systemctl list-units --no-legend 'brltty*' | wc -l)
+  expect: "^BRLTTY=[1-9] RULES=[1-9][0-9]* GENERIC=0 RUNNING=0$"

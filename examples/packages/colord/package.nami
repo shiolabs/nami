@@ -1,0 +1,4 @@
+# colord: colour profiles for screens, printers and scanners.
+files:
+  /etc/tmpfiles.d/colord.conf: |
+    d /var/lib/colord 0755 colord colord -

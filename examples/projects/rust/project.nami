@@ -1,0 +1,10 @@
+# Rust, with cargo, its formatter and linter, and editor support. The tools this project needs; `nami shell` to use them.
+packages:
+  - rustc
+  - cargo
+  - rustfmt
+  - clippy
+  - rust-analyzer
+tasks:
+  build: cargo build --release
+  test: cargo test

@@ -1,0 +1,8 @@
+[package]
+name = "rust-x11"
+version = "0.1.0"
+edition = "2021"
+description = "Opens libX11 at run time, as winit does (x11-dl): nothing links it"
+
+[dependencies]
+x11-dl = "2.21"

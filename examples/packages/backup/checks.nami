@@ -1,0 +1,13 @@
+# How to tell backups work, on a computer nami made (tests/usb.sh runs these).
+"backups: nami-backup, with restic":
+  run: $(sed -n 's/^restic=//p' $(command -v nami-backup)) version
+  expect: "^restic [0-9]"
+"backups: they're looked for every hour":
+  run: systemctl is-enabled nami-backup.timer
+  expect: "^enabled"
+"backups: a backup and a restore (of a folder of their own)":
+  run: (t=$(mktemp -d); mkdir -p $t/data/docs; echo hello > $t/data/docs/a.txt; echo pw > $t/pw; printf 'to = %s\n' $t/repo > $t/conf; export NAMI_BACKUP_CONF=$t/conf NAMI_BACKUP_STATE=$t/state NAMI_BACKUP_PASSWORD=$t/pw NAMI_BACKUP_CACHE=$t/cache NAMI_BACKUP_PATHS=$t/data NAMI_BACKUP_TARGET=$t/out; nami-backup run >/dev/null && echo changed > $t/data/docs/a.txt && nami-backup restore latest $t/data/docs >/dev/null; echo "brought back $(cat $t/out$t/data/docs/a.txt) ($(nami-backup status | jq '.days | length') day)"; rm -rf $t)
+  expect: "brought back hello \\(1 day\\)"
+"backups: Back up now (as system.nami says: backed up, or why not)":
+  run: timeout 300 systemctl start --no-ask-password nami-backup-now.service 2>/dev/null; nami-backup status | jq -r .said
+  expect: "backed up|isn't plugged in|no password|^$"

@@ -1,0 +1,33 @@
+nami-gui is MIT-licensed (LICENSE at the top of the repository), except for
+the parts below, which keep their own licences.
+
+vendor/gpui-pre, vendor/gpui-pre-linux, vendor/gpui-pre-wgpu,
+vendor/gpui-pre-windows
+  GPUI, the UI framework of the Zed editor, from crates.io (gpui-pre 0.3.9).
+  Copyright 2022 - 2025 Zed Industries, Inc. Apache License 2.0: each
+  folder's LICENSE-APACHE. Changed here; each change is marked "namiOS:".
+
+vendor/fatfs
+  rust-fatfs 0.3.6, from crates.io. Copyright 2017 Rafał Harabień. MIT
+  License: vendor/fatfs/LICENSE.txt. Changed here; each change is marked
+  "namiOS:".
+
+fonts/
+  Geist and Geist Mono. Copyright 2024 The Geist Project Authors. SIL Open
+  Font License 1.1: fonts/Geist-OFL.txt and fonts/GeistMono-OFL.txt.
+
+src/icons.rs (ICONS)
+  Icons from Lucide. ISC License, with some icons from Feather under the
+  MIT License: LICENSES/Lucide.txt.
+
+icons/dev/ (src/icons.rs, DEV)
+  Logos from Simple Icons, CC0 1.0. Each logo is a trademark of its owner,
+  shown here only to name what it stands for.
+
+assets/move-to/
+  Screenshots of namiOS, for Move to namiOS. The photos in them are NASA's,
+  in the public domain: Earthrise (Apollo 8, AS08-14-2383) in the Photos
+  widget; Greenland.jpg (meltwater lakes on the Greenland ice sheet, Earth
+  Observing-1, NASA Earth Observatory) and Kamchatka.jpg (sea ice along
+  Kamchatka's coast, ISS030-E-162344) on the desktop. The apps' icons in
+  the Dock are their owners' trademarks, shown only to name the apps.

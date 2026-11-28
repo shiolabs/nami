@@ -1,0 +1,6 @@
+# The zen kernel: Linux tuned for desktops and games (quicker to answer
+# under load), as Arch's linux-zen and CachyOS start from. Its own version
+# (newer than nixpkgs' default); drivers built for a kernel (nvidia's)
+# come built for this one.
+boot:
+  kernel: linux_zen

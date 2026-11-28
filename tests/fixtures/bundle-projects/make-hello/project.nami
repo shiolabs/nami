@@ -1,0 +1,7 @@
+# A project whose kind nami doesn't know: project.nami says how it's built.
+packages:
+  - gnumake
+bundle:
+  name: make-hello
+  version: 5.0.0
+  build: make install PREFIX=$PREFIX DESTDIR=$DESTDIR

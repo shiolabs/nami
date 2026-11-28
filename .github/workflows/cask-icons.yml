@@ -1,0 +1,187 @@
+name: Icons of Homebrew's casks
+
+# The icons nami shows on a Mac for apps from Homebrew's casks (src/casks.rs), made each week on
+# GitHub's runners for every cask nami installs (`nami catalog cask-icons` chooses them, the most
+# installed first): each one's app's icon from its developer's download
+# (packaging/cask-icons.py), and for the apps the Mac App Store sells, its screenshots (Apple's
+# public lookup, by each app's bundle identifier).
+#   plan    nami, the casks, and the last good run's set (its artifact) to start from
+#   shard   the icons, shared among Linux runners (a matrix): only what's new is made
+#   merge   put together, with the screenshots: the artifact `cask-icons` (cask-icons.tar:
+#           <token>.png and index.json; cask-screenshots.tar)
+#   mac     one Mac, only when there are icons only it can read (Assets.car alone), folded into
+#           the same artifact
+# That artifact is what nami's catalog takes: it checks each file, names its sha256 in a Mac's
+# signed catalog and publishes them. Nothing here has secrets or writes anywhere else.
+on:
+  schedule:
+    - cron: "23 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: "Make every icon again (not from the last run's)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cask-icons-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SHARDS: 12
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      # (Only to choose the casks, so not as a release's is built.)
+      - name: nami
+        run: cargo build --release --bin nami
+        env:
+          CARGO_PROFILE_RELEASE_LTO: "false"
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
+      - name: Which casks
+        run: |
+          mkdir -p plan/previous
+          curl -fsS --compressed --retry 3 -o "$RUNNER_TEMP/cask.json" https://formulae.brew.sh/api/cask.json
+          curl -fsS --compressed --retry 3 -o "$RUNNER_TEMP/installs.json" https://formulae.brew.sh/api/analytics/cask-install/365d.json
+          # (Discover's apps too, gui/src/nami.rs: MAC_POPULAR_APPS, wherever they rank.)
+          set -- $(grep -o '"cask:[a-z0-9@._+-]*"' gui/src/nami.rs | tr -d '"' | sort -u | sed 's/^/--also /')
+          NAMI_ROOT=$RUNNER_TEMP/root target/release/nami catalog cask-icons --casks "$RUNNER_TEMP/cask.json" --installs "$RUNNER_TEMP/installs.json" "$@" > plan/casks.json
+      - name: The icons made before
+        if: ${{ !inputs.fresh }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run=$(gh run list -R "$GITHUB_REPOSITORY" --workflow cask-icons.yml --branch "$GITHUB_REF_NAME" --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          if [ -n "$run" ] && gh run download "$run" -R "$GITHUB_REPOSITORY" -n cask-icons -D plan/previous; then
+            echo "from run $run: $(tar -tf plan/previous/cask-icons.tar | grep -c '\.png$') icons"
+          else
+            echo "none: every icon is made"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plan
+          path: plan
+          retention-days: 3
+          compression-level: 0
+
+  shard:
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      # (7-Zip's own build: Ubuntu's 7zip, 23.01, lists a disk image's partitions, not its files,
+      # and doesn't read LZMA ones, as Chrome's is.)
+      - name: Tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3-pil >/dev/null
+          sudo apt-get install -y -qq oxipng >/dev/null || echo "(no oxipng: Pillow's PNGs as they are)"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/7z.tar.xz" https://github.com/ip7z/7zip/releases/download/26.05/7z2605-linux-x64.tar.xz
+          echo "22cf82fcc6eb7474f1d5bb4f02c0f8ebd573a718089d6833dc30f8350a3b232e  $RUNNER_TEMP/7z.tar.xz" | sha256sum -c
+          mkdir -p "$RUNNER_TEMP/7z" && tar -C "$RUNNER_TEMP/7z" -xf "$RUNNER_TEMP/7z.tar.xz" 7zz && sudo install "$RUNNER_TEMP/7z/7zz" /usr/local/bin/7zz
+          df -h "$RUNNER_TEMP" | tail -1
+      - uses: actions/download-artifact@v4
+        with:
+          name: plan
+          path: ${{ runner.temp }}/plan
+      - name: Its share of the icons
+        run: |
+          mkdir -p "$RUNNER_TEMP/previous"
+          [ ! -e "$RUNNER_TEMP/plan/previous/cask-icons.tar" ] || tar -C "$RUNNER_TEMP/previous" -xf "$RUNNER_TEMP/plan/previous/cask-icons.tar"
+          # (Each download is deleted once its icon is out: the disk holds a few at a time.)
+          python3 -I packaging/cask-icons.py "$RUNNER_TEMP/plan/casks.json" "out/shard" --previous "$RUNNER_TEMP/previous" --shard "${{ matrix.shard }}/$SHARDS" --jobs 6 --work "$RUNNER_TEMP/work"
+          df -h "$RUNNER_TEMP" | tail -1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: out/shard
+          retention-days: 3
+          compression-level: 0
+
+  merge:
+    needs: shard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    outputs:
+      mac: ${{ steps.merge.outputs.mac }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq python3-pil >/dev/null
+      - uses: actions/download-artifact@v4
+        with:
+          name: plan
+          path: ${{ runner.temp }}/plan
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-*
+          path: ${{ runner.temp }}/shards
+      - name: The set, and the screenshots
+        id: merge
+        run: |
+          mkdir -p "$RUNNER_TEMP/previous"
+          for t in cask-icons cask-screenshots; do
+            [ ! -e "$RUNNER_TEMP/plan/previous/$t.tar" ] || tar -C "$RUNNER_TEMP/previous" -xf "$RUNNER_TEMP/plan/previous/$t.tar"
+          done
+          python3 -I packaging/cask-icons.py "$RUNNER_TEMP/plan/casks.json" out --previous "$RUNNER_TEMP/previous" --merge "$RUNNER_TEMP"/shards/shard-*
+          [ "$(python3 -c 'import json; print(len(json.load(open("out/mac.json"))))')" = 0 ] && echo mac=false >> "$GITHUB_OUTPUT" || echo mac=true >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cask-icons
+          path: |
+            out/cask-icons.tar
+            out/cask-screenshots.tar
+          retention-days: 90
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac
+          path: out/mac.json
+          retention-days: 3
+
+  # Only when merge found icons only a Mac reads (Assets.car alone), and only those: AppKit draws
+  # each as Finder does. A Mac that can't leaves the set as merge made it.
+  mac:
+    needs: merge
+    if: ${{ needs.merge.outputs.mac == 'true' }}
+    runs-on: macos-15
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: cask-icons
+          path: ${{ runner.temp }}/got
+      - uses: actions/download-artifact@v4
+        with:
+          name: mac
+          path: ${{ runner.temp }}/got
+      - name: The icons only in Assets.car
+        run: |
+          mkdir -p set
+          tar -C set -xf "$RUNNER_TEMP/got/cask-icons.tar"
+          tar -C set -xf "$RUNNER_TEMP/got/cask-screenshots.tar"
+          python3 -I packaging/cask-icons.py "$RUNNER_TEMP/got/mac.json" set --mac --work "$RUNNER_TEMP/work"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cask-icons
+          overwrite: true
+          path: |
+            set/cask-icons.tar
+            set/cask-screenshots.tar
+          retention-days: 90
+          compression-level: 0
